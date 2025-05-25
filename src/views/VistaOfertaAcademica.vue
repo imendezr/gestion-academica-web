@@ -5,7 +5,19 @@
       :mensaje="mensajeNotificacion"
       :color="colorNotificacion"
     />
-    <TablaDatos
+    <v-row>
+      <v-col cols="12" md="6">
+        <v-select
+          v-model="carreraSeleccionada"
+          :items="carreras"
+          label="Seleccionar Carrera"
+          item-title="nombre"
+          item-value="codigo"
+          @update:modelValue="cargarOfertasFiltradas"
+        ></v-select>
+      </v-col>
+    </v-row>
+    <ComponenteTablaDatos
       :headers="headers"
       :items="ofertas"
       titulo="Oferta Académica"
@@ -24,13 +36,13 @@
 </template>
 
 <script>
-import TablaDatos from '@/components/ComponenteTablaDatos.vue'
+import ComponenteTablaDatos from '@/components/ComponenteTablaDatos.vue'
 import ComponenteFormulario from '@/components/ComponenteFormulario.vue'
 import ComponenteNotificacion from '@/components/ComponenteNotificacion.vue'
 import api from '@/services/api'
 
 export default {
-  components: { TablaDatos, ComponenteFormulario, ComponenteNotificacion },
+  components: { ComponenteTablaDatos, ComponenteFormulario, ComponenteNotificacion },
   data: () => ({
     ofertas: [],
     dialog: false,
@@ -38,6 +50,8 @@ export default {
     notificacionVisible: false,
     mensajeNotificacion: '',
     colorNotificacion: 'info',
+    carreraSeleccionada: null,
+    carreras: [],
     headers: [
       { text: 'Ciclo', value: 'ciclo' },
       { text: 'Curso', value: 'curso' },
@@ -46,9 +60,38 @@ export default {
     ],
   }),
   async created() {
+    await this.cargarCarreras()
     await this.cargarOfertas()
   },
   methods: {
+    async cargarCarreras() {
+      try {
+        const response = await api.get('/carreras')
+        this.carreras = response.data
+      } catch (error) {
+        const errorMessage = error.response?.data?.message || error.message || 'Error desconocido'
+        this.mensajeNotificacion = `Error al cargar las carreras: ${errorMessage}`
+        this.colorNotificacion = 'error'
+        this.notificacionVisible = true
+        console.error('Error en cargarCarreras:', errorMessage)
+      }
+    },
+    async cargarOfertasFiltradas() {
+      if (!this.carreraSeleccionada) {
+        this.ofertas = []
+        return
+      }
+      try {
+        const response = await api.get(`/oferta-academica?carrera=${this.carreraSeleccionada}`)
+        this.ofertas = response.data
+      } catch (error) {
+        const errorMessage = error.response?.data?.message || error.message || 'Error desconocido'
+        this.mensajeNotificacion = `Error al cargar las ofertas filtradas: ${errorMessage}`
+        this.colorNotificacion = 'error'
+        this.notificacionVisible = true
+        console.error('Error en cargarOfertasFiltradas:', errorMessage)
+      }
+    },
     async cargarOfertas() {
       try {
         const response = await api.get('/oferta-academica')

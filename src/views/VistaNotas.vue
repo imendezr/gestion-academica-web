@@ -27,7 +27,7 @@
         ></v-select>
       </v-col>
     </v-row>
-    <TablaDatos
+    <ComponenteTablaDatos
       :headers="headers"
       :items="matriculas"
       titulo="Notas de Alumnos"
@@ -44,13 +44,13 @@
 </template>
 
 <script>
-import TablaDatos from '@/components/ComponenteTablaDatos.vue'
+import ComponenteTablaDatos from '@/components/ComponenteTablaDatos.vue'
 import ComponenteFormulario from '@/components/ComponenteFormulario.vue'
 import ComponenteNotificacion from '@/components/ComponenteNotificacion.vue'
 import api from '@/services/api'
 
 export default {
-  components: { TablaDatos, ComponenteFormulario, ComponenteNotificacion },
+  components: { ComponenteTablaDatos, ComponenteFormulario, ComponenteNotificacion },
   data: () => ({
     ciclos: [],
     cursos: [],
@@ -77,6 +77,9 @@ export default {
       try {
         const response = await api.get('/ciclos')
         this.ciclos = response.data
+        const cicloActivoResponse = await api.get('/ciclos/activo')
+        this.cicloSeleccionado = cicloActivoResponse.data.codigo || this.ciclos[0]?.codigo
+        await this.cargarCursos()
       } catch (error) {
         const errorMessage = error.response?.data?.message || error.message || 'Error desconocido'
         this.mensajeNotificacion = `Error al cargar los ciclos: ${errorMessage}`

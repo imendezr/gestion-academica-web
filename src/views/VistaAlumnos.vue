@@ -5,17 +5,48 @@
       :mensaje="mensajeNotificacion"
       :color="colorNotificacion"
     />
-    <TablaDatos
+    <v-text-field
+      v-model="search"
+      label="Buscar por cédula, nombre o carrera"
+      prepend-icon="mdi-magnify"
+      class="mb-4"
+    ></v-text-field>
+    <ComponenteTablaDatos
       :headers="headers"
-      :items="alumnos"
+      :items="alumnosFiltrados"
+      :custom-actions="['ver-historial']"
       titulo="Alumnos"
       @crear="mostrarFormulario"
       @editar="editarAlumno"
       @eliminar="eliminarAlumno"
+      @ver-historial="verHistorial"
     />
     <ComponenteFormulario
       v-model:dialog="dialog"
       :datos="alumnoSeleccionado"
+      :fields="[
+        {
+          key: 'cedula',
+          label: 'Cédula',
+          type: 'text',
+          rules: [(v) => !!v || 'La cédula es requerida'],
+          required: true,
+        },
+        {
+          key: 'nombre',
+          label: 'Nombre',
+          type: 'text',
+          rules: [(v) => !!v || 'El nombre es requerido'],
+          required: true,
+        },
+        {
+          key: 'carrera',
+          label: 'Carrera',
+          type: 'text',
+          rules: [(v) => !!v || 'La carrera es requerida'],
+          required: true,
+        },
+      ]"
       titulo="Gestionar Alumno"
       @guardar="guardarAlumno"
       @cancelar="dialog = false"
@@ -24,13 +55,13 @@
 </template>
 
 <script>
-import TablaDatos from '@/components/ComponenteTablaDatos.vue'
+import ComponenteTablaDatos from '@/components/ComponenteTablaDatos.vue'
 import ComponenteFormulario from '@/components/ComponenteFormulario.vue'
 import ComponenteNotificacion from '@/components/ComponenteNotificacion.vue'
 import api from '@/services/api'
 
 export default {
-  components: { TablaDatos, ComponenteFormulario, ComponenteNotificacion },
+  components: { ComponenteTablaDatos, ComponenteFormulario, ComponenteNotificacion },
   data: () => ({
     alumnos: [],
     dialog: false,
@@ -38,6 +69,7 @@ export default {
     notificacionVisible: false,
     mensajeNotificacion: '',
     colorNotificacion: 'info',
+    search: '',
     headers: [
       { text: 'Cédula', value: 'cedula' },
       { text: 'Nombre', value: 'nombre' },
@@ -45,6 +77,18 @@ export default {
       { text: 'Acciones', value: 'actions', sortable: false },
     ],
   }),
+  computed: {
+    alumnosFiltrados() {
+      if (!this.search) return this.alumnos
+      const searchLower = this.search.toLowerCase()
+      return this.alumnos.filter(
+        (alumno) =>
+          alumno.cedula.toLowerCase().includes(searchLower) ||
+          alumno.nombre.toLowerCase().includes(searchLower) ||
+          (alumno.carrera && alumno.carrera.toLowerCase().includes(searchLower)),
+      )
+    },
+  },
   async created() {
     await this.cargarAlumnos()
   },
@@ -59,6 +103,9 @@ export default {
         this.colorNotificacion = 'error'
         this.notificacionVisible = true
       }
+    },
+    verHistorial(alumno) {
+      this.$router.push(`/historial?cedula=${alumno.cedula}`)
     },
     mostrarFormulario() {
       this.alumnoSeleccionado = { cedula: '', nombre: '', carrera: '' }

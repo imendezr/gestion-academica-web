@@ -5,7 +5,7 @@
       :mensaje="mensajeNotificacion"
       :color="colorNotificacion"
     />
-    <TablaDatos
+    <ComponenteTablaDatos
       :headers="headers"
       :items="historial"
       titulo="Historial Académico"
@@ -15,13 +15,13 @@
 </template>
 
 <script>
-import TablaDatos from '@/components/ComponenteTablaDatos.vue'
+import ComponenteTablaDatos from '@/components/ComponenteTablaDatos.vue'
 import ComponenteNotificacion from '@/components/ComponenteNotificacion.vue'
 import api from '@/services/api'
 import { useUsuarioStore } from '@/stores/usuario'
 
 export default {
-  components: { TablaDatos, ComponenteNotificacion },
+  components: { ComponenteTablaDatos, ComponenteNotificacion },
   data: () => ({
     historial: [],
     notificacionVisible: false,
@@ -40,7 +40,8 @@ export default {
     async cargarHistorial() {
       try {
         const usuarioStore = useUsuarioStore()
-        const cedula = usuarioStore.cedula
+        const urlParams = new URLSearchParams(window.location.search)
+        const cedula = urlParams.get('cedula') || usuarioStore.cedula
         const response = await api.get(`/historial/${cedula}`)
         this.historial = response.data
       } catch (error) {

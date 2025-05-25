@@ -5,9 +5,15 @@
       :mensaje="mensajeNotificacion"
       :color="colorNotificacion"
     />
-    <TablaDatos
+    <v-text-field
+      v-model="search"
+      label="Buscar por código o nombre"
+      prepend-icon="mdi-magnify"
+      class="mb-4"
+    ></v-text-field>
+    <ComponenteTablaDatos
       :headers="headers"
-      :items="carreras"
+      :items="carrerasFiltradas"
       titulo="Carreras"
       @crear="mostrarFormulario"
       @editar="editarCarrera"
@@ -16,6 +22,35 @@
     <ComponenteFormulario
       v-model:dialog="dialog"
       :datos="carreraSeleccionada"
+      :fields="[
+        {
+          key: 'codigo',
+          label: 'Código',
+          type: 'text',
+          rules: [(v) => !!v || 'El código es requerido'],
+          required: true,
+        },
+        {
+          key: 'nombre',
+          label: 'Nombre',
+          type: 'text',
+          rules: [(v) => !!v || 'El nombre es requerido'],
+          required: true,
+        },
+        {
+          key: 'duracion',
+          label: 'Duración (años)',
+          type: 'number',
+          rules: [(v) => (v && v > 0) || 'La duración debe ser mayor a 0'],
+          required: true,
+        },
+        {
+          key: 'cursos',
+          label: 'Cursos Asociados',
+          type: 'select-multiple',
+          items: cursosDisponibles,
+        },
+      ]"
       titulo="Gestionar Carrera"
       @guardar="guardarCarrera"
       @cancelar="dialog = false"
@@ -24,20 +59,21 @@
 </template>
 
 <script>
-import TablaDatos from '@/components/ComponenteTablaDatos.vue'
+import ComponenteTablaDatos from '@/components/ComponenteTablaDatos.vue'
 import ComponenteFormulario from '@/components/ComponenteFormulario.vue'
 import ComponenteNotificacion from '@/components/ComponenteNotificacion.vue'
 import api from '@/services/api'
 
 export default {
-  components: { TablaDatos, ComponenteFormulario, ComponenteNotificacion },
+  components: { ComponenteTablaDatos, ComponenteFormulario, ComponenteNotificacion },
   data: () => ({
     carreras: [],
     dialog: false,
-    carreraSeleccionada: null,
+    carreraSeleccionada: { codigo: '', nombre: '', duracion: 0, cursos: [] },
     notificacionVisible: false,
     mensajeNotificacion: '',
     colorNotificacion: 'info',
+    search: '',
     headers: [
       { text: 'Código', value: 'codigo' },
       { text: 'Nombre', value: 'nombre' },
@@ -45,6 +81,17 @@ export default {
       { text: 'Acciones', value: 'actions', sortable: false },
     ],
   }),
+  computed: {
+    carrerasFiltradas() {
+      if (!this.search) return this.carreras
+      const searchLower = this.search.toLowerCase()
+      return this.carreras.filter(
+        (carrera) =>
+          carrera.codigo.toLowerCase().includes(searchLower) ||
+          carrera.nombre.toLowerCase().includes(searchLower),
+      )
+    },
+  },
   async created() {
     await this.cargarCarreras()
   },
@@ -71,7 +118,7 @@ export default {
     async guardarCarrera(datos) {
       try {
         if (this.carreraSeleccionada && this.carreraSeleccionada.codigo) {
-          await api.put(`/carreras/${datos.codigo}`, datos)
+          await api.put(`/carreras/${datos.codigo}`, { ...datos, cursos: datos.cursos })
         } else {
           await api.post('/carreras', datos)
         }

@@ -9,10 +9,21 @@ const router = createRouter({
       component: () => import('../views/VistaLogin.vue'),
     },
     {
+      path: '/registro',
+      name: 'registro',
+      component: () => import('../views/VistaRegistro.vue'),
+    },
+    {
       path: '/',
       name: 'inicio',
       component: () => import('../views/VistaInicio.vue'),
       meta: { requiresAuth: true },
+    },
+    {
+      path: '/usuarios',
+      name: 'usuarios',
+      component: () => import('../views/VistaUsuarios.vue'),
+      meta: { requiresAuth: true, roles: ['administrador'] },
     },
     {
       path: '/cursos',

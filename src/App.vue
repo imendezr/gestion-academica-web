@@ -16,7 +16,7 @@ const estaAutenticado = computed(() => !!usuarioStore.token)
       <MenuLateral />
     </v-navigation-drawer>
     <v-main>
-      <v-container fluid class="fill-height pa-0 ma-0">
+      <v-container fluid>
         <RouterView />
       </v-container>
     </v-main>
@@ -32,21 +32,11 @@ export default {
 </script>
 
 <style scoped>
-.v-app {
-  width: 100vw; /* Forzar el ancho completo */
-}
-
 .v-main {
   background-color: #f5f5f5;
   min-height: 100vh;
   width: 100%;
-  padding: 0;
-}
-
-.v-container {
-  height: 100%;
-  width: 100%;
-  margin: 0;
+  padding-top: 64px; /* Altura predeterminada de v-app-bar */
 }
 
 /* Ajustar el drawer para que no interfiera */

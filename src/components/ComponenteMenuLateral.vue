@@ -37,6 +37,12 @@
       to="/oferta-academica"
     ></v-list-item>
     <v-list-item
+      v-if="esAdministrador"
+      prepend-icon="mdi-account-group"
+      title="Usuarios"
+      to="/usuarios"
+    ></v-list-item>
+    <v-list-item
       v-if="esMatriculador"
       prepend-icon="mdi-clipboard-check"
       title="Matrícula"

@@ -5,25 +5,19 @@
       :mensaje="mensajeNotificacion"
       :color="colorNotificacion"
     />
-    <v-text-field
-      v-model="search"
-      label="Buscar por cédula o nombre"
-      prepend-icon="mdi-magnify"
-      class="mb-4"
-    ></v-text-field>
     <ComponenteTablaDatos
       :headers="headers"
-      :items="profesoresFiltrados"
-      titulo="Profesores"
+      :items="usuarios"
+      titulo="Usuarios"
       @crear="mostrarFormulario"
-      @editar="editarProfesor"
-      @eliminar="eliminarProfesor"
+      @editar="editarUsuario"
+      @eliminar="eliminarUsuario"
     />
     <ComponenteFormulario
       v-model:dialog="dialog"
-      :datos="profesorSeleccionado"
-      titulo="Gestionar Profesor"
-      @guardar="guardarProfesor"
+      :datos="usuarioSeleccionado"
+      titulo="Gestionar Usuario"
+      @guardar="guardarUsuario"
       @cancelar="dialog = false"
     />
   </v-container>
@@ -38,81 +32,68 @@ import api from '@/services/api'
 export default {
   components: { ComponenteTablaDatos, ComponenteFormulario, ComponenteNotificacion },
   data: () => ({
-    profesores: [],
+    usuarios: [],
     dialog: false,
-    profesorSeleccionado: null,
+    usuarioSeleccionado: null,
     notificacionVisible: false,
     mensajeNotificacion: '',
     colorNotificacion: 'info',
-    search: '',
     headers: [
       { text: 'Cédula', value: 'cedula' },
-      { text: 'Nombre', value: 'nombre' },
-      { text: 'Email', value: 'email' },
+      { text: 'Rol', value: 'rol' },
       { text: 'Acciones', value: 'actions', sortable: false },
     ],
   }),
-  computed: {
-    profesoresFiltrados() {
-      if (!this.search) return this.profesores
-      const searchLower = this.search.toLowerCase()
-      return this.profesores.filter(
-        (profesor) =>
-          profesor.cedula.toLowerCase().includes(searchLower) ||
-          profesor.nombre.toLowerCase().includes(searchLower),
-      )
-    },
-  },
   async created() {
-    await this.cargarProfesores()
+    await this.cargarUsuarios()
   },
   methods: {
-    async cargarProfesores() {
+    async cargarUsuarios() {
       try {
-        const response = await api.get('/profesores')
-        this.profesores = response.data
+        const response = await api.get('/usuarios')
+        this.usuarios = response.data
       } catch (error) {
         const errorMessage = error.response?.data?.message || error.message || 'Error desconocido'
-        this.mensajeNotificacion = `Error al cargar los profesores: ${errorMessage}`
+        this.mensajeNotificacion = `Error al cargar los usuarios: ${errorMessage}`
         this.colorNotificacion = 'error'
         this.notificacionVisible = true
       }
     },
     mostrarFormulario() {
-      this.profesorSeleccionado = { cedula: '', nombre: '', email: '' }
+      this.usuarioSeleccionado = { cedula: '', rol: '' }
       this.dialog = true
     },
-    editarProfesor(profesor) {
-      this.profesorSeleccionado = { ...profesor }
+    editarUsuario(usuario) {
+      this.usuarioSeleccionado = { ...usuario }
       this.dialog = true
     },
-    async guardarProfesor(datos) {
+    async guardarUsuario(datos) {
       try {
-        if (this.profesorSeleccionado && this.profesorSeleccionado.cedula) {
-          await api.put(`/profesores/${datos.cedula}`, datos)
+        if (this.usuarioSeleccionado && this.usuarioSeleccionado.cedula) {
+          await api.put(`/usuarios/${datos.cedula}`, datos)
         } else {
-          await api.post('/profesores', datos)
+          await api.post('/usuarios', datos)
         }
-        await this.cargarProfesores()
-        this.mensajeNotificacion = 'Profesor guardado exitosamente'
+        await this.cargarUsuarios()
+        this.mensajeNotificacion = 'Usuario guardado exitosamente'
         this.colorNotificacion = 'success'
       } catch (error) {
         const errorMessage = error.response?.data?.message || error.message || 'Error desconocido'
-        this.mensajeNotificacion = `Error al guardar el profesor: ${errorMessage}`
+        this.mensajeNotificacion = `Error al guardar el usuario: ${errorMessage}`
         this.colorNotificacion = 'error'
       }
       this.notificacionVisible = true
       this.dialog = false
     },
-    async eliminarProfesor(profesor) {
+    async eliminarUsuario(usuario) {
       try {
-        await api.delete(`/profesores/${profesor.cedula}`)
-        await this.cargarProfesores()
-        this.mensajeNotificacion = 'Profesor eliminado exitosamente'
+        await api.delete(`/usuarios/${usuario.cedula}`)
+        await this.cargarUsuarios()
+        this.mensajeNotificacion = 'Usuario eliminado exitosamente'
         this.colorNotificacion = 'success'
       } catch (error) {
         const errorMessage = error.response?.data?.message || error.message || 'Error desconocido'
-        this.mensajeNotificacion = `Error al eliminar el profesor: ${errorMessage}`
+        this.mensajeNotificacion = `Error al eliminar el usuario: ${errorMessage}`
         this.colorNotificacion = 'error'
       }
       this.notificacionVisible = true

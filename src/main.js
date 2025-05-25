@@ -8,6 +8,8 @@ import * as directives from 'vuetify/directives'
 import 'vuetify/styles'
 import '@mdi/font/css/materialdesignicons.css'
 import './assets/main.css'
+//import webSocketService from './services/websocket'
+//import { useUsuarioStore } from './stores/usuario'
 
 const vuetify = createVuetify({
   components,
@@ -32,5 +34,22 @@ const app = createApp(App)
 app.use(createPinia())
 app.use(router)
 app.use(vuetify)
+
+/* // Configurar WebSocket después de que la store esté disponible
+const usuarioStore = useUsuarioStore()
+
+// Conectar WebSocket si el usuario está autenticado al iniciar
+if (usuarioStore.token) {
+  webSocketService.connect()
+}
+
+// Escuchar cambios en el token para conectar/desconectar WebSocket
+usuarioStore.$subscribe((mutation, state) => {
+  if (state.token && !webSocketService.socket) {
+    webSocketService.connect()
+  } else if (!state.token && webSocketService.socket) {
+    webSocketService.disconnect()
+  }
+}) */
 
 app.mount('#app')

@@ -5,9 +5,15 @@
       :mensaje="mensajeNotificacion"
       :color="colorNotificacion"
     />
-    <TablaDatos
+    <v-text-field
+      v-model="search"
+      label="Buscar curso por nombre, código o carrera"
+      prepend-icon="mdi-magnify"
+      class="mb-4"
+    ></v-text-field>
+    <ComponenteTablaDatos
       :headers="headers"
-      :items="cursos"
+      :items="cursosFiltrados"
       titulo="Cursos"
       @crear="mostrarFormulario"
       @editar="editarCurso"
@@ -24,13 +30,13 @@
 </template>
 
 <script>
-import TablaDatos from '@/components/ComponenteTablaDatos.vue'
+import ComponenteTablaDatos from '@/components/ComponenteTablaDatos.vue'
 import ComponenteFormulario from '@/components/ComponenteFormulario.vue'
 import ComponenteNotificacion from '@/components/ComponenteNotificacion.vue'
 import api from '@/services/api'
 
 export default {
-  components: { TablaDatos, ComponenteFormulario, ComponenteNotificacion },
+  components: { ComponenteTablaDatos, ComponenteFormulario, ComponenteNotificacion },
   data: () => ({
     cursos: [],
     dialog: false,
@@ -38,6 +44,7 @@ export default {
     notificacionVisible: false,
     mensajeNotificacion: '',
     colorNotificacion: 'info',
+    search: '',
     headers: [
       { text: 'Código', value: 'codigo' },
       { text: 'Nombre', value: 'nombre' },
@@ -46,6 +53,18 @@ export default {
       { text: 'Acciones', value: 'actions', sortable: false },
     ],
   }),
+  computed: {
+    cursosFiltrados() {
+      if (!this.search) return this.cursos
+      const searchLower = this.search.toLowerCase()
+      return this.cursos.filter(
+        (curso) =>
+          curso.codigo.toLowerCase().includes(searchLower) ||
+          curso.nombre.toLowerCase().includes(searchLower) ||
+          (curso.carrera && curso.carrera.toLowerCase().includes(searchLower)),
+      )
+    },
+  },
   async created() {
     const response = await api.getCursos()
     this.cursos = response.data

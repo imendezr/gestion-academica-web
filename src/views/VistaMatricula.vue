@@ -26,7 +26,7 @@
         ></v-select>
       </v-col>
     </v-row>
-    <TablaDatos
+    <ComponenteTablaDatos
       :headers="headers"
       :items="ofertaFiltrada"
       titulo="Oferta Académica Disponible"
@@ -44,12 +44,12 @@
 </template>
 
 <script>
-import TablaDatos from '@/components/ComponenteTablaDatos.vue'
+import ComponenteTablaDatos from '@/components/ComponenteTablaDatos.vue'
 import ComponenteNotificacion from '@/components/ComponenteNotificacion.vue'
 import api from '@/services/api'
 
 export default {
-  components: { TablaDatos, ComponenteNotificacion },
+  components: { ComponenteTablaDatos, ComponenteNotificacion },
   data: () => ({
     ciclos: [],
     alumnos: [],
@@ -72,12 +72,15 @@ export default {
   methods: {
     async cargarDatosIniciales() {
       try {
-        const [ciclosResponse, alumnosResponse] = await Promise.all([
+        const [ciclosResponse, alumnosResponse, cicloActivoResponse] = await Promise.all([
           api.get('/ciclos'),
           api.get('/alumnos'),
+          api.get('/ciclos/activo'),
         ])
         this.ciclos = ciclosResponse.data
         this.alumnos = alumnosResponse.data
+        this.cicloSeleccionado = cicloActivoResponse.data.codigo || this.ciclos[0]?.codigo
+        await this.cargarOferta()
       } catch (error) {
         const errorMessage = error.response?.data?.message || error.message || 'Error desconocido'
         this.mensajeNotificacion = `Error al cargar datos iniciales: ${errorMessage}`
