@@ -55,6 +55,12 @@
       title="Historial"
       to="/historial"
     ></v-list-item>
+    <v-list-item
+      v-if="estaAutenticado"
+      prepend-icon="mdi-account-edit"
+      title="Editar Perfil"
+      to="/editar-perfil"
+    ></v-list-item>
   </v-list>
 </template>
 
@@ -71,6 +77,7 @@ export default {
       esMatriculador: computed(() => usuarioStore.rol === 'matriculador'),
       esProfesor: computed(() => usuarioStore.rol === 'profesor'),
       esAlumno: computed(() => usuarioStore.rol === 'alumno'),
+      estaAutenticado: computed(() => !!usuarioStore.token),
     }
   },
 }

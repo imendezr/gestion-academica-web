@@ -37,11 +37,3 @@ onMounted(() => {
     </v-main>
   </v-app>
 </template>
-
-<script>
-export default {
-  data: () => ({
-    drawer: false, // Cerrado por defecto
-  }),
-}
-</script>

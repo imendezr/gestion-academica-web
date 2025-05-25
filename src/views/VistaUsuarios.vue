@@ -60,7 +60,7 @@ export default {
       }
     },
     mostrarFormulario() {
-      this.usuarioSeleccionado = { cedula: '', rol: '' }
+      this.usuarioSeleccionado = { cedula: '', clave: '', rol: '' }
       this.dialog = true
     },
     editarUsuario(usuario) {
@@ -72,14 +72,13 @@ export default {
         if (this.usuarioSeleccionado && this.usuarioSeleccionado.cedula) {
           await api.put(`/usuarios/${datos.cedula}`, datos)
         } else {
-          await api.post('/usuarios', datos)
+          await api.post('/usuarios', datos) // Incluye clave en datos
         }
         await this.cargarUsuarios()
         this.mensajeNotificacion = 'Usuario guardado exitosamente'
         this.colorNotificacion = 'success'
       } catch (error) {
-        const errorMessage = error.response?.data?.message || error.message || 'Error desconocido'
-        this.mensajeNotificacion = `Error al guardar el usuario: ${errorMessage}`
+        this.mensajeNotificacion = `Error al guardar el usuario: ${error.message}`
         this.colorNotificacion = 'error'
       }
       this.notificacionVisible = true

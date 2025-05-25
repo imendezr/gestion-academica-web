@@ -20,9 +20,6 @@
             required
           ></v-text-field>
           <v-btn color="primary" type="submit" block>Iniciar Sesión</v-btn>
-          <v-btn color="secondary" block class="mt-2" @click="$router.push('/registro')">
-            Crear Cuenta
-          </v-btn>
         </v-form>
       </v-card-text>
     </v-card>
