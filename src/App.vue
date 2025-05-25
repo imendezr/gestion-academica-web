@@ -3,16 +3,31 @@ import { RouterView } from 'vue-router'
 import BarraNavegacion from './components/ComponenteBarraNavegacion.vue'
 import MenuLateral from './components/ComponenteMenuLateral.vue'
 import { useUsuarioStore } from '@/stores/usuario'
-import { computed } from 'vue'
+import { computed, ref, onMounted } from 'vue'
+import { useDisplay } from 'vuetify'
 
 const usuarioStore = useUsuarioStore()
 const estaAutenticado = computed(() => !!usuarioStore.token)
+const { lgAndUp } = useDisplay()
+const drawer = ref(false)
+
+onMounted(() => {
+  // Mostrar el sidebar por defecto en pantallas grandes
+  if (lgAndUp.value) {
+    drawer.value = true
+  }
+})
 </script>
 
 <template>
   <v-app>
     <BarraNavegacion @toggle-drawer="drawer = !drawer" />
-    <v-navigation-drawer v-if="estaAutenticado" v-model="drawer" app temporary>
+    <v-navigation-drawer
+      v-if="estaAutenticado"
+      v-model="drawer"
+      app
+      :temporary="$vuetify.display.mdAndDown"
+    >
       <MenuLateral />
     </v-navigation-drawer>
     <v-main>
@@ -30,19 +45,3 @@ export default {
   }),
 }
 </script>
-
-<style scoped>
-.v-main {
-  background-color: #f5f5f5;
-  min-height: 100vh;
-  width: 100%;
-  padding-top: 64px; /* Altura predeterminada de v-app-bar */
-}
-
-/* Ajustar el drawer para que no interfiera */
-@media (min-width: 960px) {
-  .v-navigation-drawer {
-    display: none;
-  }
-}
-</style>
