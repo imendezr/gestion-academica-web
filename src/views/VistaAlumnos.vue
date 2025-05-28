@@ -24,29 +24,7 @@
     <ComponenteFormulario
       v-model:dialog="dialog"
       :datos="alumnoSeleccionado"
-      :fields="[
-        {
-          key: 'cedula',
-          label: 'Cédula',
-          type: 'text',
-          rules: [(v) => !!v || 'La cédula es requerida'],
-          required: true,
-        },
-        {
-          key: 'nombre',
-          label: 'Nombre',
-          type: 'text',
-          rules: [(v) => !!v || 'El nombre es requerido'],
-          required: true,
-        },
-        {
-          key: 'carrera',
-          label: 'Carrera',
-          type: 'text',
-          rules: [(v) => !!v || 'La carrera es requerida'],
-          required: true,
-        },
-      ]"
+      :fields="formFields"
       titulo="Gestionar Alumno"
       @guardar="guardarAlumno"
       @cancelar="dialog = false"
@@ -64,6 +42,7 @@ export default {
   components: { ComponenteTablaDatos, ComponenteFormulario, ComponenteNotificacion },
   data: () => ({
     alumnos: [],
+    carreras: [],
     dialog: false,
     alumnoSeleccionado: null,
     notificacionVisible: false,
@@ -73,42 +52,147 @@ export default {
     headers: [
       { text: 'Cédula', value: 'cedula' },
       { text: 'Nombre', value: 'nombre' },
-      { text: 'Carrera', value: 'carrera' },
+      { text: 'Teléfono', value: 'telefono' },
+      { text: 'Email', value: 'email' },
+      { text: 'Fecha de Nacimiento', value: 'fechaNacimiento' },
+      { text: 'Carrera', value: 'nombreCarrera' },
       { text: 'Acciones', value: 'actions', sortable: false },
+    ],
+    formFields: [
+      {
+        key: 'cedula',
+        label: 'Cédula',
+        type: 'text',
+        rules: [(v) => !!v || 'La cédula es requerida'],
+        required: true,
+      },
+      {
+        key: 'nombre',
+        label: 'Nombre',
+        type: 'text',
+        rules: [(v) => !!v || 'El nombre es requerido'],
+        required: true,
+      },
+      {
+        key: 'telefono',
+        label: 'Telefono',
+        type: 'text',
+        rules: [(v) => !!v || 'El telefono es requerido'],
+        required: true,
+      },
+       {
+        key: 'email',
+        label: 'Email',
+        type: 'email',
+        rules: [(v) => !!v || 'El email es requerido'],
+        required: true,
+      },
+       {
+        key: 'fechaNacimiento',
+        label: 'Fecha de Nacimiento',
+        type: 'date',
+        rules: [(v) => !!v || 'La fecha de nacimiento es requerida'],
+        required: true,
+      },
+      {
+        key: 'pkCarrera',
+        label: 'Carrera',
+        type: 'select',
+        items: [],
+        itemTitle: 'nombre',
+        itemValue: 'idCarrera',
+        rules: [(v) => !!v || 'La carrera es requerida'],
+        required: true,
+      },
     ],
   }),
   computed: {
+    alumnosConCarrera() {
+      return this.alumnos.map(alumno => ({
+        ...alumno,
+        nombreCarrera: this.obtenerNombreCarrera(alumno.pkCarrera)
+      }))
+    },
+
     alumnosFiltrados() {
-      if (!this.search) return this.alumnos
+
+      const alumnosBase = this.alumnosConCarrera;
+
+      if (!this.search) return alumnosBase
       const searchLower = this.search.toLowerCase()
-      return this.alumnos.filter(
+      return alumnosBase.filter(
         (alumno) =>
           alumno.cedula.toLowerCase().includes(searchLower) ||
           alumno.nombre.toLowerCase().includes(searchLower) ||
-          (alumno.carrera && alumno.carrera.toLowerCase().includes(searchLower)),
+          alumno.telefono.toLowerCase().includes(searchLower) ||
+          alumno.email.toLowerCase().includes(searchLower) ||
+          alumno.fechaNacimiento.toLowerCase().includes(searchLower) ||
+          alumno.nombreCarrera.toLowerCase().includes(searchLower),
       )
     },
   },
   async created() {
+    await this.cargarCarreras()
     await this.cargarAlumnos()
   },
   methods: {
-    async cargarAlumnos() {
+
+    // Nuevo método para cargar las carreras
+    async cargarCarreras() {
       try {
-        const response = await api.get('/alumnos')
-        this.alumnos = response.data
+        const response = await api.getCarreras()
+        this.carreras = response.data
+
+        // Actualizar el campo de carreras en formFields
+        const carreraField = this.formFields.find(field => field.key === 'pkCarrera')
+        if (carreraField) {
+          carreraField.items = this.carreras
+        }
       } catch (error) {
-        const errorMessage = error.response?.data?.message || error.message || 'Error desconocido'
-        this.mensajeNotificacion = `Error al cargar los alumnos: ${errorMessage}`
-        this.colorNotificacion = 'error'
-        this.notificacionVisible = true
+        const mensaje = error.response?.data?.message || ''
+        if (mensaje.includes('No hay datos')) {
+          this.carreras = []
+        } else {
+          this.mensajeNotificacion = `Error al cargar las carreras: ${mensaje || error.message}`
+          this.colorNotificacion = 'error'
+          this.notificacionVisible = true
+        }
       }
     },
-    verHistorial(alumno) {
-      this.$router.push(`/historial?cedula=${alumno.cedula}`)
+
+    // Método para obtener el nombre de la carrera por ID
+    obtenerNombreCarrera(idCarrera) {
+      const carrera = this.carreras.find(c => c.idCarrera === idCarrera)
+      return carrera ? carrera.nombre : 'Carrera no encontrada'
     },
+
+    async cargarAlumnos() {
+      try {
+        const response = await api.getAlumnos()
+        this.alumnos = response.data
+      } catch (error) {
+         const mensaje = error.response?.data?.message || ''
+        if (mensaje.includes('No hay datos')) {
+          this.alumnos = [] // <- Tratar como lista vacía
+        } else {
+          this.mensajeNotificacion = `Error al cargar los cursos: ${mensaje || error.message}`
+          this.colorNotificacion = 'error'
+          this.notificacionVisible = true
+        }
+      }
+    },
+    /*verHistorial(alumno) {
+      this.$router.push(`/historial?cedula=${alumno.cedula}`)
+    },*/
     mostrarFormulario() {
-      this.alumnoSeleccionado = { cedula: '', nombre: '', carrera: '' }
+      this.alumnoSeleccionado = { idAlumno: null,
+                                  cedula: null,
+                                  nombre: null,
+                                  telefono: null,
+                                  email: null,
+                                  fechaNacimiento: null,
+                                  pkCarrera: null,
+                                  nombreCarrera: null}
       this.dialog = true
     },
     editarAlumno(alumno) {
@@ -117,10 +201,10 @@ export default {
     },
     async guardarAlumno(datos) {
       try {
-        if (this.alumnoSeleccionado && this.alumnoSeleccionado.cedula) {
-          await api.put(`/alumnos/${datos.cedula}`, datos)
+        if (this.alumnoSeleccionado && this.alumnoSeleccionado.idAlumno) {
+          await api.updateAlumno(datos)
         } else {
-          await api.post('/alumnos', datos)
+          await api.createAlumno(datos)
         }
         await this.cargarAlumnos()
         this.mensajeNotificacion = 'Alumno guardado exitosamente'
@@ -135,7 +219,7 @@ export default {
     },
     async eliminarAlumno(alumno) {
       try {
-        await api.delete(`/alumnos/${alumno.cedula}`)
+        await api.deleteAlumno(alumno.idAlumno)
         await this.cargarAlumnos()
         this.mensajeNotificacion = 'Alumno eliminado exitosamente'
         this.colorNotificacion = 'success'

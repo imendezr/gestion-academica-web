@@ -6,6 +6,7 @@
     class="elevation-1"
     :show-select="selectable"
     v-model="selectedItems"
+    :show-headers="true"
     @update:modelValue="emitSelection"
   >
     <template v-slot:top>
@@ -16,14 +17,22 @@
       </v-toolbar>
     </template>
     <template v-slot:[`item.actions`]="{ item }">
+
       <v-icon v-if="showActions" @click="$emit('editar', item)">mdi-pencil</v-icon>
       <v-icon v-if="showActions" @click="$emit('eliminar', item)">mdi-delete</v-icon>
+
       <!-- Botón para acciones personalizadas -->
       <v-icon v-if="hasCustomAction('ver-historial')" @click="$emit('ver-historial', item)">
         mdi-history
       </v-icon>
       <v-icon v-if="hasCustomAction('marcar-activo')" @click="$emit('marcar-activo', item)">
         mdi-check-circle
+      </v-icon>
+      <v-icon v-if="hasCustomAction('ver-cursos')" @click="$emit('ver-cursos', item)">
+        mdi-book-open
+      </v-icon>
+      <v-icon v-if="hasCustomAction('agregar-curso')" @click="$emit('agregar-curso', item)">
+        mdi-book-plus
       </v-icon>
     </template>
   </v-data-table>

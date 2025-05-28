@@ -22,6 +22,7 @@
     <ComponenteFormulario
       v-model:dialog="dialog"
       :datos="profesorSeleccionado"
+      :fields="formFields"
       titulo="Gestionar Profesor"
       @guardar="guardarProfesor"
       @cancelar="dialog = false"
@@ -48,8 +49,35 @@ export default {
     headers: [
       { text: 'Cédula', value: 'cedula' },
       { text: 'Nombre', value: 'nombre' },
+      { text: 'Telefono', value: 'telefono' },
       { text: 'Email', value: 'email' },
       { text: 'Acciones', value: 'actions', sortable: false },
+    ],
+    formFields: [
+      {
+        key: 'cedula',
+        label: 'Cédula',
+        type: 'text',
+        rules: [(v) => !!v || 'La cédula es requerida'],
+      },
+      {
+        key: 'nombre',
+        label: 'Nombre',
+        type: 'text',
+        rules: [(v) => !!v || 'El nombre es requerido'],
+      },
+      {
+        key: 'telefono',
+        label: 'Teléfono',
+        type: 'text',
+        rules: [(v) => !!v || 'El teléfono es requerido'],
+      },
+      {
+        key: 'email',
+        label: 'Email',
+        type: 'email',
+        rules: [(v) => !!v || 'El email es requerido'],
+      },
     ],
   }),
   computed: {
@@ -58,8 +86,11 @@ export default {
       const searchLower = this.search.toLowerCase()
       return this.profesores.filter(
         (profesor) =>
+          profesor.idProfesor.toString().includes(searchLower) ||
           profesor.cedula.toLowerCase().includes(searchLower) ||
-          profesor.nombre.toLowerCase().includes(searchLower),
+          profesor.nombre.toLowerCase().includes(searchLower) ||
+          profesor.telefono.toLowerCase().includes(searchLower) ||
+          profesor.email.toLowerCase().includes(searchLower)
       )
     },
   },
@@ -69,17 +100,21 @@ export default {
   methods: {
     async cargarProfesores() {
       try {
-        const response = await api.get('/profesores')
+        const response = await api.getProfesores()
         this.profesores = response.data
       } catch (error) {
-        const errorMessage = error.response?.data?.message || error.message || 'Error desconocido'
-        this.mensajeNotificacion = `Error al cargar los profesores: ${errorMessage}`
+         const mensaje = error.response?.data?.message || ''
+      if (mensaje.includes('No hay datos')) {
+        this.profesores = [] // <- Tratar como lista vacía
+      } else {
+        this.mensajeNotificacion = `Error al cargar las carreras: ${mensaje || error.message}`
         this.colorNotificacion = 'error'
         this.notificacionVisible = true
       }
+      }
     },
     mostrarFormulario() {
-      this.profesorSeleccionado = { cedula: '', nombre: '', email: '' }
+      this.profesorSeleccionado = { idProfesor: '' , cedula: '', nombre: '', telefono: '', email: '' }
       this.dialog = true
     },
     editarProfesor(profesor) {
@@ -88,10 +123,10 @@ export default {
     },
     async guardarProfesor(datos) {
       try {
-        if (this.profesorSeleccionado && this.profesorSeleccionado.cedula) {
-          await api.put(`/profesores/${datos.cedula}`, datos)
+        if (this.profesorSeleccionado && this.profesorSeleccionado.idProfesor) {
+          await api.updateProfesor(datos)
         } else {
-          await api.post('/profesores', datos)
+          await api.createProfesor(datos)
         }
         await this.cargarProfesores()
         this.mensajeNotificacion = 'Profesor guardado exitosamente'
@@ -106,7 +141,7 @@ export default {
     },
     async eliminarProfesor(profesor) {
       try {
-        await api.delete(`/profesores/${profesor.cedula}`)
+        await api.deleteProfesor(profesor.idProfesor)
         await this.cargarProfesores()
         this.mensajeNotificacion = 'Profesor eliminado exitosamente'
         this.colorNotificacion = 'success'

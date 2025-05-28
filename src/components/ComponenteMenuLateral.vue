@@ -73,11 +73,11 @@ export default {
     const usuarioStore = useUsuarioStore()
 
     return {
-      esAdministrador: computed(() => usuarioStore.rol === 'administrador'),
-      esMatriculador: computed(() => usuarioStore.rol === 'matriculador'),
-      esProfesor: computed(() => usuarioStore.rol === 'profesor'),
-      esAlumno: computed(() => usuarioStore.rol === 'alumno'),
-      estaAutenticado: computed(() => !!usuarioStore.token),
+      esAdministrador: computed(() => usuarioStore.tipo === 'Administrador'),
+      esMatriculador: computed(() => usuarioStore.tipo === 'Matriculador'),
+      esProfesor: computed(() => usuarioStore.tipo === 'Profesor'),
+      esAlumno: computed(() => usuarioStore.tipo === 'Alumno'),
+      estaAutenticado: computed(() => !!usuarioStore.idUsuario),
     }
   },
 }

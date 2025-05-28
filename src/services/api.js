@@ -1,7 +1,7 @@
 import axios from 'axios';
 
 const api = axios.create({
-  baseURL: 'http://localhost:8080/api', // Ajusta según tu backend
+  baseURL: 'http://localhost:8080/api',
 });
 
 export default {
@@ -12,17 +12,20 @@ export default {
   createCurso(data) {
     return api.post('/cursos/insertar', data);
   },
-  updateCurso(codigo, data) {
-    return api.put('/cursos/modificar', { ...data, codigo }); // Ajusta según el ID esperado por el backend
+  updateCurso(data) {
+    return api.put('/cursos/modificar', data);
   },
-  deleteCurso(codigo) {
-    return api.delete(`/cursos/eliminar/${codigo}`);
+  deleteCurso(idCurso) {
+    return api.delete(`/cursos/eliminar/${idCurso}`);
   },
   getCursoByCodigo(codigo) {
     return api.get(`/cursos/buscarPorCodigo?codigo=${codigo}`);
   },
   getCursoByNombre(nombre) {
     return api.get(`/cursos/buscarPorNombre?nombre=${nombre}`);
+  },
+  getCursosbyCarrera(idCarrera) {
+    return api.get(`/cursos/buscarCursosPorCarrera?idCarrera=${idCarrera}`);
   },
 
   // Alumnos
@@ -32,11 +35,11 @@ export default {
   createAlumno(data) {
     return api.post('/alumnos/insertar', data);
   },
-  updateAlumno(cedula, data) {
-    return api.put('/alumnos/modificar', { ...data, cedula });
+  updateAlumno(data) {
+    return api.put('/alumnos/modificar', data);
   },
-  deleteAlumno(cedula) {
-    return api.delete(`/alumnos/eliminar/${cedula}`);
+  deleteAlumno(idAlumno) {
+    return api.delete(`/alumnos/eliminar/${idAlumno}`);
   },
   getAlumnoByCedula(cedula) {
     return api.get(`/alumnos/buscarPorCedula?cedula=${cedula}`);
@@ -58,11 +61,11 @@ export default {
   createCarrera(data) {
     return api.post('/carreras/insertar', data);
   },
-  updateCarrera(codigo, data) {
-    return api.put('/carreras/modificar', { ...data, codigo });
+  updateCarrera(data) {
+    return api.put('/carreras/modificar', data);
   },
-  deleteCarrera(codigo) {
-    return api.delete(`/carreras/eliminar/${codigo}`);
+  deleteCarrera(idCarrera) {
+    return api.delete(`/carreras/eliminar/${idCarrera}`);
   },
   getCarreraByCodigo(codigo) {
     return api.get(`/carreras/buscarPorCodigo?codigo=${codigo}`);
@@ -89,11 +92,11 @@ export default {
   createCiclo(data) {
     return api.post('/ciclos/insertar', data);
   },
-  updateCiclo(codigo, data) {
-    return api.put('/ciclos/modificar', { ...data, codigo });
+  updateCiclo(data) {
+    return api.put('/ciclos/modificar',data);
   },
-  deleteCiclo(codigo) {
-    return api.delete(`/ciclos/eliminar/${codigo}`);
+  deleteCiclo(idCiclo) {
+    return api.delete(`/ciclos/eliminar/${idCiclo}`);
   },
   getCicloByYear(anio) {
     return api.get(`/ciclos/buscarPorAnnio?annio=${anio}`);
@@ -145,11 +148,11 @@ export default {
   createProfesor(data) {
     return api.post('/profesores/insertar', data);
   },
-  updateProfesor(cedula, data) {
-    return api.put('/profesores/modificar', { ...data, cedula });
+  updateProfesor(data) {
+    return api.put('/profesores/modificar', data);
   },
-  deleteProfesor(cedula) {
-    return api.delete(`/profesores/eliminar/${cedula}`);
+  deleteProfesor(idProfesor) {
+    return api.delete(`/profesores/eliminar/${idProfesor}`);
   },
   getProfesorByCedula(cedula) {
     return api.get(`/profesores/buscarPorCedula?cedula=${cedula}`);

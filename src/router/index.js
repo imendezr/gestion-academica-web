@@ -23,61 +23,61 @@ const routes = [
     path: '/cursos',
     name: 'Cursos',
     component: () => import('../views/VistaCursos.vue'),
-    meta: { requiresAuth: true, roles: ['administrador'] },
+    meta: { requiresAuth: true, roles: ['Administrador'] },
   },
   {
     path: '/carreras',
     name: 'Carreras',
     component: () => import('../views/VistaCarreras.vue'),
-    meta: { requiresAuth: true, roles: ['administrador'] },
+    meta: { requiresAuth: true, roles: ['Administrador'] },
   },
   {
     path: '/profesores',
     name: 'Profesores',
     component: () => import('../views/VistaProfesores.vue'),
-    meta: { requiresAuth: true, roles: ['administrador'] },
+    meta: { requiresAuth: true, roles: ['Administrador'] },
   },
   {
     path: '/alumnos',
     name: 'Alumnos',
     component: () => import('../views/VistaAlumnos.vue'),
-    meta: { requiresAuth: true, roles: ['administrador'] },
+    meta: { requiresAuth: true, roles: ['Administrador'] },
   },
   {
     path: '/ciclos',
     name: 'Ciclos',
     component: () => import('../views/VistaCiclos.vue'),
-    meta: { requiresAuth: true, roles: ['administrador'] },
+    meta: { requiresAuth: true, roles: ['Administrador'] },
   },
   {
     path: '/oferta-academica',
     name: 'OfertaAcademica',
     component: () => import('../views/VistaOfertaAcademica.vue'),
-    meta: { requiresAuth: true, roles: ['administrador'] },
+    meta: { requiresAuth: true, roles: ['Administrador'] },
   },
   {
     path: '/usuarios',
     name: 'Usuarios',
     component: () => import('../views/VistaUsuarios.vue'),
-    meta: { requiresAuth: true, roles: ['administrador'] },
+    meta: { requiresAuth: true, roles: ['Administrador'] },
   },
   {
     path: '/matricula',
     name: 'Matricula',
     component: () => import('../views/VistaMatricula.vue'),
-    meta: { requiresAuth: true, roles: ['matriculador'] },
+    meta: { requiresAuth: true, roles: ['Matriculador'] },
   },
   {
     path: '/notas',
     name: 'Notas',
     component: () => import('../views/VistaNotas.vue'),
-    meta: { requiresAuth: true, roles: ['profesor'] },
+    meta: { requiresAuth: true, roles: ['Profesor'] },
   },
   {
     path: '/historial',
     name: 'Historial',
     component: () => import('../views/VistaHistorial.vue'),
-    meta: { requiresAuth: true, roles: ['alumno'] },
+    meta: { requiresAuth: true, roles: ['Alumno'] },
   },
 ]
 
@@ -95,9 +95,9 @@ router.beforeEach((to, from, next) => {
   const defaultTitle = 'Gestión Académica'
   document.title = to.meta.title ? `${to.meta.title} - ${defaultTitle}` : defaultTitle
 
-  if (requiresAuth && !usuarioStore.token) {
+  if (requiresAuth && !usuarioStore.idUsuario) {
     next('/login')
-  } else if (requiresAuth && requiredRoles.length && !requiredRoles.includes(usuarioStore.rol)) {
+  } else if (requiresAuth && requiredRoles.length && !requiredRoles.includes(usuarioStore.tipo)) {
     next('/') // Redirigir a home si el rol no coincide
   } else {
     next()

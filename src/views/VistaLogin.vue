@@ -26,33 +26,41 @@
   </v-container>
 </template>
 
-<script>
+<script setup>
+import { ref } from 'vue'
+import { useRouter } from 'vue-router'
 import { useUsuarioStore } from '@/stores/usuario'
-//import api from '@/services/api'
+import api from '@/services/api'
 
-export default {
-  data: () => ({
-    cedula: '',
-    clave: '',
-  }),
-  methods: {
-    async iniciarSesion() {
-      try {
-        // const response = await api.post('/auth/login', { cedula: this.cedula, clave: this.clave })
-        console.log('Intentando iniciar sesión con', { cedula: this.cedula, clave: this.clave })
-        const response = { data: { rol: 'administrador', token: 'mock-token' } } // Simulación
-        const usuarioStore = useUsuarioStore()
-        usuarioStore.iniciarSesion({
-          cedula: this.cedula,
-          rol: response.data.rol,
-          token: response.data.token,
-        })
-        this.$router.push('/')
-      } catch (error) {
-        console.error('Error al iniciar sesión:', error.message)
-        alert(`Error al iniciar sesión: ${error.response?.data?.message || error.message}`)
-      }
-    },
-  },
+const router = useRouter()
+const usuarioStore = useUsuarioStore()
+usuarioStore.cargarUsuarioLocalStorage()
+
+const cedula = ref('')
+const clave = ref('')
+
+const iniciarSesion = async () => {
+  try {
+    console.log('Intentando iniciar sesión con', { cedula: cedula.value, clave: clave.value })
+
+    const response = await api.login(cedula.value, clave.value)
+    console.log('Respuesta del servidor:', response)
+
+    if (!response.data || !response.data.idUsuario) {
+      throw new Error('Datos de usuario no válidos')
+    }
+
+    usuarioStore.iniciarSesion({
+      idUsuario: response.data.idUsuario,
+      cedula: cedula.value,
+      clave: clave.value,
+      tipo: response.data.tipo,
+    })
+
+    router.push('/')
+  } catch (error) {
+    console.error('Error al iniciar sesión:', error.message)
+    alert(`Error al iniciar sesión: ${error.response?.data?.message || error.message}`)
+  }
 }
 </script>

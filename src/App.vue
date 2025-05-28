@@ -7,7 +7,7 @@ import { computed, ref, onMounted } from 'vue'
 import { useDisplay } from 'vuetify'
 
 const usuarioStore = useUsuarioStore()
-const estaAutenticado = computed(() => !!usuarioStore.token)
+const estaAutenticado = computed(() => !! usuarioStore.idUsuario)
 const { lgAndUp } = useDisplay()
 const drawer = ref(false)
 
@@ -28,12 +28,12 @@ onMounted(() => {
       app
       :temporary="$vuetify.display.mdAndDown"
     >
-      <MenuLateral />
+    <MenuLateral />
     </v-navigation-drawer>
-    <v-main>
-      <v-container fluid>
-        <RouterView />
-      </v-container>
-    </v-main>
+        <v-main>
+          <v-container fluid>
+            <RouterView />
+          </v-container>
+        </v-main>
   </v-app>
 </template>

@@ -31,7 +31,7 @@ export default {
     const usuarioStore = useUsuarioStore()
     const router = useRouter()
 
-    const estaAutenticado = computed(() => !!usuarioStore.token)
+    const estaAutenticado = computed(() => !!usuarioStore.idUsuario)
 
     const cerrarSesion = () => {
       usuarioStore.cerrarSesion()

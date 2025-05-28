@@ -7,7 +7,7 @@
     />
     <v-text-field
       v-model="search"
-      label="Buscar curso por nombre, código o carrera"
+      label="Buscar curso por nombre código"
       prepend-icon="mdi-magnify"
       class="mb-4"
     ></v-text-field>
@@ -22,6 +22,7 @@
     <ComponenteFormulario
       v-model:dialog="dialog"
       :datos="cursoSeleccionado"
+      :fields="formFields"
       titulo="Gestionar Curso"
       @guardar="guardarCurso"
       @cancelar="dialog = false"
@@ -52,6 +53,36 @@ export default {
       { text: 'Horas Semanales', value: 'horasSemanales' },
       { text: 'Acciones', value: 'actions', sortable: false },
     ],
+    formFields: [
+    {
+      key: 'codigo',
+      label: 'Código del curso',
+      type: 'text',
+      required: true,
+      rules: [(v) => !!v || 'El código es requerido'],
+    },
+    {
+      key: 'nombre',
+      label: 'Nombre del curso',
+      type: 'text',
+      required: true,
+      rules: [(v) => !!v || 'El nombre es requerido'],
+    },
+    {
+      key: 'creditos',
+      label: 'Créditos',
+      type: 'number',
+      required: true,
+      rules: [(v) => v >= 0 || 'Debe ser un número válido'],
+    },
+    {
+      key: 'horasSemanales',
+      label: 'Horas semanales',
+      type: 'number',
+      required: true,
+      rules: [(v) => v >= 0 || 'Debe ser un número válido'],
+    },
+    ]
   }),
   computed: {
     cursosFiltrados() {
@@ -59,49 +90,67 @@ export default {
       const searchLower = this.search.toLowerCase()
       return this.cursos.filter(
         (curso) =>
-          curso.codigo.toLowerCase().includes(searchLower) ||
-          curso.nombre.toLowerCase().includes(searchLower) ||
-          (curso.carrera && curso.carrera.toLowerCase().includes(searchLower)),
+          curso.codigo.toString().toLowerCase().includes(searchLower) ||
+          curso.nombre.toString().toLowerCase().includes(searchLower) ||
+          curso.creditos.toString().includes(searchLower) ||
+          curso.horasSemanales.toString().includes(searchLower),
       )
     },
   },
   async created() {
-    const response = await api.getCursos()
-    this.cursos = response.data
+   await this.cargarCursos()
   },
   methods: {
+    async cargarCursos() {
+      try {
+        const response = await api.getCursos()
+        this.cursos = response.data
+        console.log('Cursos cargados:', this.cursos)
+      } catch (error) {
+      const mensaje = error.response?.data?.message || ''
+      if (mensaje.includes('No hay datos')) {
+        this.cursos = [] // <- Tratar como lista vacía
+      } else {
+        this.mensajeNotificacion = `Error al cargar los cursos: ${mensaje || error.message}`
+        this.colorNotificacion = 'error'
+        this.notificacionVisible = true
+      }
+    }
+    },
     mostrarFormulario() {
-      this.cursoSeleccionado = { codigo: '', nombre: '', creditos: 0, horasSemanales: 0 }
+      this.cursoSeleccionado = {idCurso: null, codigo: null, nombre: null, creditos: null, horasSemanales: null }
       this.dialog = true
     },
     editarCurso(curso) {
-      this.cursoSeleccionado = { ...curso }
+      this.cursoSeleccionado = {...curso}
       this.dialog = true
     },
     async guardarCurso(datos) {
       try {
-        if (this.cursoSeleccionado && this.cursoSeleccionado.codigo) {
-          await api.put(`/cursos/${datos.codigo}`, datos)
+        if (this.cursoSeleccionado && this.cursoSeleccionado.idCurso) {
+          console.log('Actualizando curso:', datos)
+          await api.updateCurso(datos)
         } else {
-          await api.post('/cursos', datos)
+          console.log('Creando Curso:', datos)
+          await api.createCurso(datos)
         }
-        const response = await api.getCursos()
-        this.cursos = response.data
+        await this.cargarCursos()
         this.mensajeNotificacion = 'Curso guardado exitosamente'
         this.colorNotificacion = 'success'
+        this.notificacionVisible = true
+        this.dialog = false
       } catch (error) {
         const errorMessage = error.response?.data?.message || error.message || 'Error desconocido'
         this.mensajeNotificacion = `Error al guardar el curso: ${errorMessage}`
         this.colorNotificacion = 'error'
+        this.notificacionVisible = true
       }
-      this.notificacionVisible = true
-      this.dialog = false
     },
     async eliminarCurso(curso) {
       try {
-        await api.delete(`/cursos/${curso.codigo}`)
-        const response = await api.getCursos()
-        this.cursos = response.data
+        await api.deleteCurso(curso.idCurso)
+        await this.cargarCursos()
+        console.log('Cursos cargados:', this.cursos)
         this.mensajeNotificacion = 'Curso eliminado exitosamente'
         this.colorNotificacion = 'success'
       } catch (error) {

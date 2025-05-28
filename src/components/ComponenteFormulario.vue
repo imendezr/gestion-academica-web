@@ -5,6 +5,7 @@
       <v-card-text>
         <v-form ref="form" @submit.prevent="guardar">
           <template v-for="(field, index) in fields" :key="index">
+            <!-- Textos y números -->
             <v-text-field
               v-if="field.type === 'text' || field.type === 'number'"
               v-model="datosLocal[field.key]"
@@ -12,20 +13,72 @@
               :type="field.type"
               :rules="field.rules || []"
               :required="field.required"
+              class="mb-4"
             ></v-text-field>
-            <!-- Campo de selección múltiple (para cursos) -->
+
+             <!-- Email -->
+            <v-text-field
+              v-else-if="field.type === 'email'"
+              v-model="datosLocal[field.key]"
+              :label="field.label"
+              type="email"
+              :rules="field.rules || []"
+              :required="field.required"
+              class="mb-4"
+            ></v-text-field>
+
+            <!-- Select simple -->
             <v-select
-              v-if="field.type === 'select-multiple'"
+              v-else-if="field.type === 'select'"
               v-model="datosLocal[field.key]"
               :label="field.label"
               :items="field.items || []"
-              :item-title="field.itemTitle || 'nombre'"
-              :item-value="field.itemValue || 'codigo'"
+              :item-title="field.itemTitle || 'label'"
+              :item-value="field.itemValue || 'value'"
+              class="mb-4"
+            ></v-select>
+
+            <!-- Select múltiple -->
+            <v-select
+              v-else-if="field.type === 'select-multiple'"
+              v-model="datosLocal[field.key]"
+              :label="field.label"
+              :items="field.items || []"
+              :item-title="field.itemTitle || 'label'"
+              :item-value="field.itemValue || 'value' "
               multiple
               chips
               class="mb-4"
             ></v-select>
+
+            <!-- Área de texto -->
+            <v-textarea
+              v-else-if="field.type === 'textarea'"
+              v-model="datosLocal[field.key]"
+              :label="field.label"
+              :rules="field.rules || []"
+              :required="field.required"
+              class="mb-4"
+            ></v-textarea>
+
+            <!-- Fecha -->
+            <v-text-field
+              v-else-if="field.type === 'date'"
+              v-model="datosLocal[field.key]"
+              :label="field.label"
+              type="date"
+              class="mb-4"
+            ></v-text-field>
+
+            <!-- Checkbox -->
+            <v-checkbox
+              v-else-if="field.type === 'checkbox'"
+              v-model="datosLocal[field.key]"
+              :label="field.label"
+              class="mb-4"
+            ></v-checkbox>
           </template>
+
           <v-btn color="primary" type="submit">Guardar</v-btn>
           <v-btn color="secondary" @click="cancelar">Cancelar</v-btn>
         </v-form>
@@ -35,9 +88,8 @@
 </template>
 
 <script>
-import api from '@/services/api'
-
 export default {
+  name: 'FormularioDialogo',
   props: {
     dialog: Boolean,
     datos: Object,
@@ -54,26 +106,17 @@ export default {
     return {
       dialogLocal: this.dialog,
       datosLocal: { ...this.datos },
-      cursosDisponibles: [],
-    }
-  },
-  async created() {
-    // Cargar cursos solo si hay un campo que los necesita
-    if (this.fields.some((field) => field.type === 'select-multiple' && field.key === 'cursos')) {
-      try {
-        const response = await api.get('/cursos')
-        this.cursosDisponibles = response.data
-      } catch (error) {
-        console.error('Error al cargar cursos disponibles:', error.message)
-      }
     }
   },
   watch: {
-    dialog(newValue) {
-      this.dialogLocal = newValue
+    dialog(newVal) {
+      this.dialogLocal = newVal
     },
-    datos(newValue) {
-      this.datosLocal = { ...newValue }
+    datos(newVal) {
+      this.datosLocal = { ...newVal }
+    },
+    dialogLocal(newVal) {
+      this.$emit('update:dialog', newVal)
     },
   },
   methods: {
