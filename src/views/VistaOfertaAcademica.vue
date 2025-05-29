@@ -5,75 +5,67 @@
       :mensaje="mensajeNotificacion"
       :color="colorNotificacion"
     />
-
-    <!-- Filtros de selección -->
-    <v-row class="mb-4">
+    <v-row>
       <v-col cols="12" md="6">
         <v-select
           v-model="carreraSeleccionada"
           :items="carreras"
           label="Seleccionar Carrera"
           item-title="nombre"
-          item-value="codigo"
-          @update:modelValue="onCarreraChange"
-          clearable
+          item-value="idCarrera"
+          @update:modelValue="cargarCursos"
         ></v-select>
       </v-col>
-      <v-col cols="12" md="6">
+         <v-col cols="12" md="6">
         <v-select
           v-model="cicloSeleccionado"
           :items="ciclos"
           label="Seleccionar Ciclo"
-          item-title="nombre"
-          item-value="codigo"
+          item-title="label"
+          item-value="idCiclo"
           @update:modelValue="cargarCursos"
-          :disabled="!carreraSeleccionada"
-          clearable
         ></v-select>
       </v-col>
     </v-row>
 
-    <!-- Tabla de Cursos -->
+    <!-- Tabla de cursos -->
     <ComponenteTablaDatos
-      v-if="mostrarCursos"
+      v-if="vistaActual === 'cursos'"
       :headers="headersCursos"
       :items="cursos"
-      titulo="Cursos Disponibles"
-      :mostrar-boton-crear="false"
-      @ver-grupos="verGruposCurso"
+      :custom-actions="['ver-grupos-curso']"
+      :show-actions="false"
+      :titulo="tituloTabla"
+      :mostrar-boton-nuevo="false"
+      @ver-grupos-curso="verGruposDelCurso"
     />
 
-    <!-- Tabla de Grupos -->
+    <!-- Tabla de grupos -->
     <ComponenteTablaDatos
-      v-if="mostrarGrupos"
-      :headers="headersGrupos"
-      :items="grupos"
-      :titulo="`Grupos del curso: ${cursoSeleccionado?.nombre || ''}`"
-      @crear="mostrarFormularioGrupo"
-      @editar="editarGrupo"
-      @eliminar="eliminarGrupo"
-    >
-      <template #toolbar-actions>
-        <v-btn
-          color="secondary"
-          variant="outlined"
-          @click="volverACursos"
-          class="mr-2"
-        >
-          <v-icon left>mdi-arrow-left</v-icon>
-          Volver a Cursos
-        </v-btn>
-      </template>
-    </ComponenteTablaDatos>
-
-    <!-- Formulario para Grupos -->
-    <ComponenteFormulario
-      v-model:dialog="dialogGrupo"
-      :datos="grupoSeleccionado"
-      titulo="Gestionar Grupo"
-      @guardar="guardarGrupo"
-      @cancelar="dialogGrupo = false"
+    v-if="vistaActual === 'grupos'"
+    :headers="headersGrupos"
+    :items="grupos"
+    :show-actions="true"
+    :titulo="tituloTabla"
+    :mostrar-boton-nuevo="true"
+    @crear="mostrarFormulario"
+    @editar="editarGrupo"
+    @eliminar="eliminarGrupo"
     />
+
+    <ComponenteFormulario
+      v-model:dialog="dialog"
+      :datos="grupoSeleccionado"
+      :fields="formFields"
+      :titulo="tituloFormulario"
+      @guardar="guardarGrupo"
+      @cancelar="dialog = false"
+    />
+
+    <v-btn v-if="vistaActual === 'grupos'" @click="volverACursos" class="mt-4" color="secondary">
+    Volver
+    </v-btn>
+
   </v-container>
 </template>
 
@@ -86,198 +78,240 @@ import api from '@/services/api'
 export default {
   components: { ComponenteTablaDatos, ComponenteFormulario, ComponenteNotificacion },
   data: () => ({
-    // Estados de vista
-    mostrarCursos: false,
-    mostrarGrupos: false,
-
-    // Datos de filtros
-    carreraSeleccionada: null,
-    cicloSeleccionado: null,
-    cursoSeleccionado: null,
-
-    // Listas de datos
     carreras: [],
     ciclos: [],
     cursos: [],
     grupos: [],
-
-    // Formulario de grupos
-    dialogGrupo: false,
+    profesores: [],
+    carreraSeleccionada: null,
+    cicloSeleccionado: null,
+    profesorSeleccionado: null,
     grupoSeleccionado: null,
-
-    // Notificaciones
+    cursoActual: null,
+    vistaActual: 'cursos',
+    tituloTabla: 'Oferta Académica',
+    dialog: false,
+    modoEdicion: false,
     notificacionVisible: false,
     mensajeNotificacion: '',
     colorNotificacion: 'info',
-
-    // Headers para las tablas
+    dialogConfirmarEliminar: false,
     headersCursos: [
-      { text: 'Código', value: 'codigo' },
+      { text: 'Codigo', value: 'codigo' },
       { text: 'Nombre', value: 'nombre' },
-      { text: 'Créditos', value: 'creditos' },
-      { text: 'Grupos', value: 'grupos_count' },
       { text: 'Acciones', value: 'actions', sortable: false },
     ],
-    headersGrupos: [
-      { text: 'Número', value: 'numero' },
-      { text: 'Profesor', value: 'profesor' },
+     headersGrupos: [
+      { text: 'Número de Grupo', value: 'numeroGrupo' },
       { text: 'Horario', value: 'horario' },
-      { text: 'Aula', value: 'aula' },
-      { text: 'Cupo', value: 'cupo' },
+      { text: 'Profesor', value: 'nombreProfesor' },
       { text: 'Acciones', value: 'actions', sortable: false },
     ],
   }),
-
+  computed: {
+    formFields() {
+      return [
+        {
+          key: 'numeroGrupo',
+          label: 'Número de Grupo',
+          type: 'number',
+          rules: [(v) => !!v || 'El número de grupo es requerido'],
+          required: true,
+        },
+        {
+          key: 'horario',
+          label: 'Horario',
+          type: 'text',
+          rules: [(v) => !!v || 'El horario es requerido'],
+          required: true,
+        },
+        {
+          key: 'profesor',
+          label: 'Profesor',
+          type: 'select',
+          items: this.profesores,
+          itemTitle: 'label',
+          itemValue: 'value',
+          rules: [(v) => !!v || 'El profesor es requerido'],
+          required: true,
+        },
+      ]
+    }
+  },
   async created() {
     await this.cargarCarreras()
     await this.cargarCiclos()
+    await this.cargarProfesores()
   },
-
   methods: {
     async cargarCarreras() {
       try {
-        const response = await api.get('/carreras')
+        const response = await api.getCarreras()
         this.carreras = response.data
       } catch (error) {
-        this.mostrarError('Error al cargar las carreras', error)
+        const errorMessage = error.response?.data?.message || error.message || 'Error desconocido'
+        this.mensajeNotificacion = `Error al cargar las carreras: ${errorMessage}`
+        this.colorNotificacion = 'error'
+        this.notificacionVisible = true
+        console.error('Error en cargarCarreras:', errorMessage)
       }
     },
-
     async cargarCiclos() {
       try {
-        const response = await api.get('/ciclos')
-        this.ciclos = response.data
+        const response = await api.getCiclos()
+        this.ciclos = response.data.map(ciclo => ({
+        ...ciclo,
+        label: `${ciclo.numero} - ${ciclo.anio}`
+      }))
       } catch (error) {
-        this.mostrarError('Error al cargar los ciclos', error)
+        const errorMessage = error.response?.data?.message || error.message || 'Error desconocido'
+        this.mensajeNotificacion = `Error al cargar las carreras: ${errorMessage}`
+        this.colorNotificacion = 'error'
+        this.notificacionVisible = true
+        console.error('Error en cargarCiclos:', errorMessage)
       }
     },
-
-    onCarreraChange() {
-      this.cicloSeleccionado = null
-      this.resetearVistas()
-    },
-
     async cargarCursos() {
       if (!this.carreraSeleccionada || !this.cicloSeleccionado) {
-        this.resetearVistas()
+        this.cursos = []
         return
       }
-
       try {
-        const response = await api.get(`/oferta-academica/cursos`, {
-          params: {
-            carrera: this.carreraSeleccionada,
-            ciclo: this.cicloSeleccionado
-          }
-        })
+        const response = await api.getCursosbyCarreraAndCiclo(this.carreraSeleccionada, this.cicloSeleccionado)
         this.cursos = response.data
-        this.mostrarCursos = true
-        this.mostrarGrupos = false
       } catch (error) {
-        this.mostrarError('Error al cargar los cursos', error)
-        this.resetearVistas()
+        const errorMessage = error.response?.data?.message || error.message || 'Error desconocido'
+        this.mensajeNotificacion = `Error al cargar los cursos: ${errorMessage}`
+        this.colorNotificacion = 'error'
+        this.notificacionVisible = true
+        console.error('Error en cargarCursos:', errorMessage)
       }
     },
+    async cargarProfesores() {
+        try {
+          const response = await api.getProfesores()
+          this.profesores = response.data.map(p => ({
+            label: p.nombre,
+            value: p.idProfesor
+          }))
+          console.log('Profesores cargados:', this.profesores)
+        } catch (error) {
+          const errorMessage = error.response?.data?.message || error.message || 'Error desconocido'
+          this.mensajeNotificacion = `Error al cargar los profesores: ${errorMessage}`
+          this.colorNotificacion = 'error'
+          this.notificacionVisible = true
+          console.error('Error en cargarProfesores:', errorMessage)
+        }
+      },
+      async verGruposDelCurso(curso) {
+        try {
+          this.cursoActual = curso;
 
-    async verGruposCurso(curso) {
-      this.cursoSeleccionado = curso
-      try {
-        const response = await api.get(`/oferta-academica/grupos`, {
-          params: {
-            carrera: this.carreraSeleccionada,
-            ciclo: this.cicloSeleccionado,
-            curso: curso.codigo
+          // Siempre cambiar la vista primero
+          this.vistaActual = 'grupos';
+          this.tituloTabla = `Grupos de ${curso.nombre}`;
+          console.log(this.carreraSeleccionada, curso.idCurso);
+
+          const response = await api.getGruposByCarreraAndCurso(this.carreraSeleccionada, curso.idCurso);
+          this.grupos = response.data;
+          console.log(response.data);
+        } catch (error) {
+          this.grupos = [];
+          const mensaje = error.response?.data?.message || error.message || 'Error al cargar grupos';
+          if (!mensaje.includes('No hay datos') && !mensaje.includes('No se encontraron')) {
+            this.mensajeNotificacion = `Error al cargar los grupos: ${mensaje}`;
+            this.colorNotificacion = 'error';
+            this.notificacionVisible = true;
+            console.error('Error en verGruposDelCurso:', mensaje);
           }
-        })
-        this.grupos = response.data
-        this.mostrarGrupos = true
-        this.mostrarCursos = false
-      } catch (error) {
-        this.mostrarError('Error al cargar los grupos', error)
-      }
+          this.vistaActual = 'grupos';
+          this.tituloTabla = `Grupos de ${curso.nombre}`;
+        }
     },
+    async guardarGrupo(datosGrupo) {
+        try {
+        if (this.modoEdicion) {
+          // Actualizar grupo existente
+          const grupoData = {
+            idGrupo: this.grupoSeleccionado.idGrupo,
+            idCarreraCurso: this.cursoActual.idCarreraCurso,
+            numeroGrupo: parseInt(datosGrupo.numeroGrupo),
+            horario: datosGrupo.horario,
+            idProfesor: datosGrupo.profesor
+          };
 
-    volverACursos() {
-      this.mostrarGrupos = false
-      this.mostrarCursos = true
-      this.cursoSeleccionado = null
-      this.grupos = []
-    },
+          await api.updateGrupo(grupoData);
+          this.mensajeNotificacion = 'Grupo actualizado exitosamente';
+          this.colorNotificacion = 'success';
+          this.notificacionVisible = true;
 
-    mostrarFormularioGrupo() {
-      this.grupoSeleccionado = {
-        numero: '',
-        profesor: '',
-        horario: '',
-        aula: '',
-        cupo: '',
-        carrera: this.carreraSeleccionada,
-        ciclo: this.cicloSeleccionado,
-        curso: this.cursoSeleccionado?.codigo
-      }
-      this.dialogGrupo = true
-    },
-
-    editarGrupo(grupo) {
-      this.grupoSeleccionado = { ...grupo }
-      this.dialogGrupo = true
-    },
-
-    async guardarGrupo(datos) {
-      try {
-        const esEdicion = this.grupoSeleccionado && this.grupoSeleccionado.id
-
-        if (esEdicion) {
-          await api.put(`/oferta-academica/grupos/${datos.id}`, datos)
-          this.mostrarExito('Grupo actualizado exitosamente')
         } else {
-          await api.post('/oferta-academica/grupos', {
-            ...datos,
-            carrera: this.carreraSeleccionada,
-            ciclo: this.cicloSeleccionado,
-            curso: this.cursoSeleccionado.codigo
-          })
-          this.mostrarExito('Grupo creado exitosamente')
+          // Crear nuevo grupo
+          const grupoData = {
+            idCarreraCurso: this.cursoActual.idCarreraCurso,
+            numeroGrupo: parseInt(datosGrupo.numeroGrupo),
+            horario: datosGrupo.horario,
+            idProfesor: datosGrupo.profesor
+          };
+
+          await api.createGrupo(grupoData);
+          this.mensajeNotificacion = 'Grupo creado exitosamente';
+          this.colorNotificacion = 'success';
+          this.notificacionVisible = true;
         }
 
-        await this.verGruposCurso(this.cursoSeleccionado)
-        this.dialogGrupo = false
+        this.dialog = false;
+        this.modoEdicion = false;
+        await this.verGruposDelCurso(this.cursoActual);
+
       } catch (error) {
-        this.mostrarError('Error al guardar el grupo', error)
+        const errorMessage = error.response?.data?.message || error.message || 'Error al procesar el grupo';
+        const accion = this.modoEdicion ? 'actualizar' : 'crear';
+        this.mensajeNotificacion = `Error al ${accion} el grupo: ${errorMessage}`;
+        this.colorNotificacion = 'error';
+        this.notificacionVisible = true;
+        console.error(`Error en guardarGrupo (${accion}):`, errorMessage);
       }
     },
-
     async eliminarGrupo(grupo) {
       try {
-        await api.delete(`/oferta-academica/grupos/${grupo.id}`)
-        await this.verGruposCurso(this.cursoSeleccionado)
-        this.mostrarExito('Grupo eliminado exitosamente')
+        await api.deleteGrupo(grupo.idGrupo);
+        this.mensajeNotificacion = 'Grupo eliminado exitosamente';
+        this.colorNotificacion = 'success';
+        this.notificacionVisible = true;
+        this.dialogConfirmarEliminar = false;
+        await this.verGruposDelCurso(this.cursoActual);
       } catch (error) {
-        this.mostrarError('Error al eliminar el grupo', error)
+        const errorMessage = error.response?.data?.message || error.message || 'Error al eliminar el grupo';
+        this.mensajeNotificacion = `Error al eliminar el grupo: ${errorMessage}`;
+        this.colorNotificacion = 'error';
+        this.notificacionVisible = true;
+        console.error('Error en eliminarGrupo:', errorMessage);
       }
     },
-
-    resetearVistas() {
-      this.mostrarCursos = false
-      this.mostrarGrupos = false
-      this.cursos = []
-      this.grupos = []
-      this.cursoSeleccionado = null
+    editarGrupo(grupo) {
+      this.modoEdicion = true;
+      this.grupoSeleccionado = {
+        idGrupo: grupo.idGrupo,
+        numeroGrupo: grupo.numeroGrupo,
+        horario: grupo.horario,
+        profesor: grupo.idProfesor
+      };
+      this.dialog = true;
     },
-
-    mostrarError(mensaje, error) {
-      const errorMessage = error?.response?.data?.message || error?.message || 'Error desconocido'
-      this.mensajeNotificacion = `${mensaje}: ${errorMessage}`
-      this.colorNotificacion = 'error'
-      this.notificacionVisible = true
-      console.error(mensaje, errorMessage)
+    volverACursos() {
+      this.vistaActual = 'cursos'
+      this.tituloTabla = 'Oferta Académica'
     },
-
-    mostrarExito(mensaje) {
-      this.mensajeNotificacion = mensaje
-      this.colorNotificacion = 'success'
-      this.notificacionVisible = true
-    }
+    mostrarFormulario() {
+      this.modoEdicion = false;
+      this.grupoSeleccionado = {
+        numeroGrupo: null,
+        horario: null,
+        profesor: null
+      };
+      this.dialog = true;
+    },
   },
 }
 </script>

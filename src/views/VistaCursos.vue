@@ -40,8 +40,8 @@ export default {
   components: { ComponenteTablaDatos, ComponenteFormulario, ComponenteNotificacion },
   data: () => ({
     cursos: [],
-    dialog: false,
     cursoSeleccionado: null,
+    dialog: false,
     notificacionVisible: false,
     mensajeNotificacion: '',
     colorNotificacion: 'info',
@@ -84,6 +84,9 @@ export default {
     },
     ]
   }),
+  async created() {
+   await this.cargarCursos()
+  },
   computed: {
     cursosFiltrados() {
       if (!this.search) return this.cursos
@@ -97,15 +100,11 @@ export default {
       )
     },
   },
-  async created() {
-   await this.cargarCursos()
-  },
   methods: {
     async cargarCursos() {
       try {
         const response = await api.getCursos()
         this.cursos = response.data
-        console.log('Cursos cargados:', this.cursos)
       } catch (error) {
       const mensaje = error.response?.data?.message || ''
       if (mensaje.includes('No hay datos')) {
@@ -117,21 +116,11 @@ export default {
       }
     }
     },
-    mostrarFormulario() {
-      this.cursoSeleccionado = {idCurso: null, codigo: null, nombre: null, creditos: null, horasSemanales: null }
-      this.dialog = true
-    },
-    editarCurso(curso) {
-      this.cursoSeleccionado = {...curso}
-      this.dialog = true
-    },
     async guardarCurso(datos) {
       try {
         if (this.cursoSeleccionado && this.cursoSeleccionado.idCurso) {
-          console.log('Actualizando curso:', datos)
           await api.updateCurso(datos)
         } else {
-          console.log('Creando Curso:', datos)
           await api.createCurso(datos)
         }
         await this.cargarCursos()
@@ -146,11 +135,14 @@ export default {
         this.notificacionVisible = true
       }
     },
+    editarCurso(curso) {
+      this.cursoSeleccionado = {...curso}
+      this.dialog = true
+    },
     async eliminarCurso(curso) {
       try {
         await api.deleteCurso(curso.idCurso)
         await this.cargarCursos()
-        console.log('Cursos cargados:', this.cursos)
         this.mensajeNotificacion = 'Curso eliminado exitosamente'
         this.colorNotificacion = 'success'
       } catch (error) {
@@ -159,6 +151,15 @@ export default {
         this.colorNotificacion = 'error'
       }
       this.notificacionVisible = true
+    },
+     mostrarFormulario() {
+      this.cursoSeleccionado = {
+        idCurso: null,
+        codigo: null,
+        nombre: null,
+        creditos: null,
+        horasSemanales: null }
+      this.dialog = true
     },
   },
 }

@@ -16,6 +16,7 @@
     <ComponenteFormulario
       v-model:dialog="dialog"
       :datos="usuarioSeleccionado"
+      :fields="formFields"
       titulo="Gestionar Usuario"
       @guardar="guardarUsuario"
       @cancelar="dialog = false"
@@ -40,8 +41,37 @@ export default {
     colorNotificacion: 'info',
     headers: [
       { text: 'Cédula', value: 'cedula' },
-      { text: 'Rol', value: 'rol' },
+      { text: 'Tipo', value: 'tipo' },
       { text: 'Acciones', value: 'actions', sortable: false },
+    ],
+    formFields: [
+      {
+        key: 'cedula',
+        label: 'Cédula',
+        type: 'text',
+        rules: [(v) => !!v || 'La cédula es requerida'],
+        required: true,
+      },
+      {
+        key: 'clave',
+        label: 'Clave',
+        type: 'text',
+        rules: [(v) => !!v || 'La clave requerido'],
+        required: true,
+      },
+      {
+        key: 'tipo',
+        label: 'Tipo',
+        type: 'select',
+        items: [
+        {label: 'Alumno', value: 'Alumno' },
+        {label: 'Profesor', value: 'Profesor'},
+        {label: 'Matriculador', value: 'Matriculador'},
+        {label: 'Administrador', value: 'Administrador'},
+        ],
+        rules: [(v) => !!v || 'El tipo es requerido'],
+        required: true,
+      },
     ],
   }),
   async created() {
@@ -50,7 +80,7 @@ export default {
   methods: {
     async cargarUsuarios() {
       try {
-        const response = await api.get('/usuarios')
+        const response = await api.getUsuarios()
         this.usuarios = response.data
       } catch (error) {
         const errorMessage = error.response?.data?.message || error.message || 'Error desconocido'
@@ -60,7 +90,7 @@ export default {
       }
     },
     mostrarFormulario() {
-      this.usuarioSeleccionado = { cedula: '', clave: '', rol: '' }
+      this.usuarioSeleccionado = { cedula: null, clave: null, tipo: null}
       this.dialog = true
     },
     editarUsuario(usuario) {
@@ -69,10 +99,10 @@ export default {
     },
     async guardarUsuario(datos) {
       try {
-        if (this.usuarioSeleccionado && this.usuarioSeleccionado.cedula) {
-          await api.put(`/usuarios/${datos.cedula}`, datos)
+        if (this.usuarioSeleccionado && this.usuarioSeleccionado.idUsuario) {
+          await api.updateUsuario(datos)
         } else {
-          await api.post('/usuarios', datos) // Incluye clave en datos
+          await api.createUsuario(datos)
         }
         await this.cargarUsuarios()
         this.mensajeNotificacion = 'Usuario guardado exitosamente'

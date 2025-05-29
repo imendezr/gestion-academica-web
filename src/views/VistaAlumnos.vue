@@ -43,8 +43,8 @@ export default {
   data: () => ({
     alumnos: [],
     carreras: [],
-    dialog: false,
     alumnoSeleccionado: null,
+    dialog: false,
     notificacionVisible: false,
     mensajeNotificacion: '',
     colorNotificacion: 'info',
@@ -106,6 +106,10 @@ export default {
       },
     ],
   }),
+  async created() {
+    await this.cargarCarreras()
+    await this.cargarAlumnos()
+  },
   computed: {
     alumnosConCarrera() {
       return this.alumnos.map(alumno => ({
@@ -113,11 +117,8 @@ export default {
         nombreCarrera: this.obtenerNombreCarrera(alumno.pkCarrera)
       }))
     },
-
     alumnosFiltrados() {
-
       const alumnosBase = this.alumnosConCarrera;
-
       if (!this.search) return alumnosBase
       const searchLower = this.search.toLowerCase()
       return alumnosBase.filter(
@@ -131,19 +132,12 @@ export default {
       )
     },
   },
-  async created() {
-    await this.cargarCarreras()
-    await this.cargarAlumnos()
-  },
-  methods: {
 
-    // Nuevo método para cargar las carreras
+  methods: {
     async cargarCarreras() {
       try {
         const response = await api.getCarreras()
         this.carreras = response.data
-
-        // Actualizar el campo de carreras en formFields
         const carreraField = this.formFields.find(field => field.key === 'pkCarrera')
         if (carreraField) {
           carreraField.items = this.carreras
@@ -159,8 +153,6 @@ export default {
         }
       }
     },
-
-    // Método para obtener el nombre de la carrera por ID
     obtenerNombreCarrera(idCarrera) {
       const carrera = this.carreras.find(c => c.idCarrera === idCarrera)
       return carrera ? carrera.nombre : 'Carrera no encontrada'
@@ -184,21 +176,6 @@ export default {
     /*verHistorial(alumno) {
       this.$router.push(`/historial?cedula=${alumno.cedula}`)
     },*/
-    mostrarFormulario() {
-      this.alumnoSeleccionado = { idAlumno: null,
-                                  cedula: null,
-                                  nombre: null,
-                                  telefono: null,
-                                  email: null,
-                                  fechaNacimiento: null,
-                                  pkCarrera: null,
-                                  nombreCarrera: null}
-      this.dialog = true
-    },
-    editarAlumno(alumno) {
-      this.alumnoSeleccionado = { ...alumno }
-      this.dialog = true
-    },
     async guardarAlumno(datos) {
       try {
         if (this.alumnoSeleccionado && this.alumnoSeleccionado.idAlumno) {
@@ -217,6 +194,10 @@ export default {
       this.notificacionVisible = true
       this.dialog = false
     },
+     editarAlumno(alumno) {
+      this.alumnoSeleccionado = { ...alumno }
+      this.dialog = true
+    },
     async eliminarAlumno(alumno) {
       try {
         await api.deleteAlumno(alumno.idAlumno)
@@ -229,6 +210,18 @@ export default {
         this.colorNotificacion = 'error'
       }
       this.notificacionVisible = true
+    },
+    mostrarFormulario() {
+      this.alumnoSeleccionado = {
+        idAlumno: null,
+        cedula: null,
+        nombre: null,
+        telefono: null,
+        email: null,
+        fechaNacimiento: null,
+        pkCarrera: null,
+        nombreCarrera: null}
+      this.dialog = true
     },
   },
 }

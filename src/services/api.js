@@ -27,6 +27,9 @@ export default {
   getCursosbyCarrera(idCarrera) {
     return api.get(`/cursos/buscarCursosPorCarrera?idCarrera=${idCarrera}`);
   },
+  getCursosbyCarreraAndCiclo(idCarrera, idCiclo) {
+    return api.get(`/cursos/buscarCursosPorCarreraYCiclo/${idCarrera}/${idCiclo}`);
+  },
 
   // Alumnos
   getAlumnos() {
@@ -101,28 +104,28 @@ export default {
   getCicloByYear(anio) {
     return api.get(`/ciclos/buscarPorAnnio?annio=${anio}`);
   },
-  setCicloActivo(cicloId) {
-    return api.post(`/ciclos/activarCiclo/${cicloId}`);
+  setCicloActivo(idCiclo) {
+    return api.post(`/ciclos/activarCiclo/${idCiclo}`);
   },
   getCicloActivo() {
     return api.get('/ciclos/activo'); // Suponiendo que existe un endpoint para obtener el ciclo activo
   },
 
   // Oferta Académica
-  getOfertaAcademica() {
-    return api.get('/grupos/listar'); // Ajuste según backend real
+  getGrupos() {
+    return api.get('/grupos/listar');
   },
-  getOfertaAcademicaByCarrera(carreraId) {
-    return api.get(`/grupos/buscarCursosPorCarreraYCiclo/${carreraId}`);
-  },
-  createOfertaAcademica(data) {
+  createGrupo(data) {
     return api.post('/grupos/insertar', data);
   },
-  updateOfertaAcademica(cicloId, cursoId, data) {
-    return api.put(`/grupos/modificar`, { ...data, ciclo: cicloId, curso: cursoId }); // Ajuste
+  updateGrupo(data) {
+    return api.put(`/grupos/modificar`, data);
   },
-  deleteOfertaAcademica(cicloId, cursoId) {
-    return api.delete(`/grupos/eliminar/${cicloId}/${cursoId}`); // Ajuste
+  deleteGrupo(idGrupo) {
+    return api.delete(`/grupos/eliminar/${idGrupo}`);
+  },
+  getGruposByCarreraAndCurso(idCarrera, idCurso) {
+      return api.get(`/grupos/buscarGruposPorCarreraCurso/${idCarrera}/${idCurso}`);
   },
 
   // Matrícula
@@ -168,11 +171,11 @@ export default {
   createUsuario(data) {
     return api.post('/usuarios/insertar', data);
   },
-  updateUsuario(cedula, data) {
-    return api.put('/usuarios/modificar', { ...data, cedula });
+  updateUsuario(data) {
+    return api.put('/usuarios/modificar', data);
   },
-  deleteUsuario(cedula) {
-    return api.delete(`/usuarios/eliminar/${cedula}`);
+  deleteUsuario(idUsuario) {
+    return api.delete(`/usuarios/eliminar/${idUsuario}`);
   },
   getUsuarioByCedula(cedula) {
     return api.get(`/usuarios/buscarPorCedula?cedula=${cedula}`);

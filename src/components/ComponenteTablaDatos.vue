@@ -13,7 +13,7 @@
       <v-toolbar flat>
         <v-toolbar-title>{{ titulo }}</v-toolbar-title>
         <v-spacer></v-spacer>
-        <v-btn color="primary" @click="$emit('crear')">Nuevo</v-btn>
+         <v-btn v-if="mostrarBotonNuevo" color="primary" @click="$emit('crear')">Nuevo</v-btn>
       </v-toolbar>
     </template>
     <template v-slot:[`item.actions`]="{ item }">
@@ -28,11 +28,14 @@
       <v-icon v-if="hasCustomAction('marcar-activo')" @click="$emit('marcar-activo', item)">
         mdi-check-circle
       </v-icon>
-      <v-icon v-if="hasCustomAction('ver-cursos')" @click="$emit('ver-cursos', item)">
-        mdi-book-open
+      <v-icon v-if="hasCustomAction('ver-cursos-carrera')" @click="$emit('ver-cursos-carrera', item)">
+        mdi-book
       </v-icon>
       <v-icon v-if="hasCustomAction('agregar-curso')" @click="$emit('agregar-curso', item)">
         mdi-book-plus
+      </v-icon>
+      <v-icon v-if="hasCustomAction('ver-grupos-curso')" @click="$emit('ver-grupos-curso', item)">
+        mdi-eye
       </v-icon>
     </template>
   </v-data-table>
@@ -55,6 +58,10 @@ export default {
     customActions: {
       type: Array,
       default: () => [],
+    },
+     mostrarBotonNuevo: {
+      type: Boolean,
+      default: true,
     },
   },
   data() {

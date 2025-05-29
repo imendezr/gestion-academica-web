@@ -40,8 +40,8 @@ export default {
   components: { ComponenteTablaDatos, ComponenteFormulario, ComponenteNotificacion },
   data: () => ({
     profesores: [],
-    dialog: false,
     profesorSeleccionado: null,
+    dialog: false,
     notificacionVisible: false,
     mensajeNotificacion: '',
     colorNotificacion: 'info',
@@ -80,6 +80,9 @@ export default {
       },
     ],
   }),
+  async created() {
+    await this.cargarProfesores()
+  },
   computed: {
     profesoresFiltrados() {
       if (!this.search) return this.profesores
@@ -93,9 +96,6 @@ export default {
           profesor.email.toLowerCase().includes(searchLower)
       )
     },
-  },
-  async created() {
-    await this.cargarProfesores()
   },
   methods: {
     async cargarProfesores() {
@@ -112,14 +112,6 @@ export default {
         this.notificacionVisible = true
       }
       }
-    },
-    mostrarFormulario() {
-      this.profesorSeleccionado = { idProfesor: '' , cedula: '', nombre: '', telefono: '', email: '' }
-      this.dialog = true
-    },
-    editarProfesor(profesor) {
-      this.profesorSeleccionado = { ...profesor }
-      this.dialog = true
     },
     async guardarProfesor(datos) {
       try {
@@ -139,7 +131,11 @@ export default {
       this.notificacionVisible = true
       this.dialog = false
     },
-    async eliminarProfesor(profesor) {
+    editarProfesor(profesor) {
+      this.profesorSeleccionado = { ...profesor }
+      this.dialog = true
+    },
+      async eliminarProfesor(profesor) {
       try {
         await api.deleteProfesor(profesor.idProfesor)
         await this.cargarProfesores()
@@ -151,6 +147,10 @@ export default {
         this.colorNotificacion = 'error'
       }
       this.notificacionVisible = true
+    },
+    mostrarFormulario() {
+      this.profesorSeleccionado = { idProfesor: null , cedula: null, nombre: null, telefono: null, email: null }
+      this.dialog = true
     },
   },
 }

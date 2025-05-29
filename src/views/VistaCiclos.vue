@@ -42,8 +42,8 @@ export default {
   components: { ComponenteTablaDatos, ComponenteFormulario, ComponenteNotificacion },
   data: () => ({
     ciclos: [],
-    dialog: false,
     cicloSeleccionado: null,
+    dialog: false,
     notificacionVisible: false,
     mensajeNotificacion: '',
     colorNotificacion: 'info',
@@ -68,7 +68,7 @@ export default {
       key: 'numero',
       label: 'Numero',
       type: 'select',
-       items: [
+      items: [
         { label: '1', value: '1' },
         { label: '2', value: '2' },
       ],
@@ -102,15 +102,15 @@ export default {
     },
     ],
   }),
+  async created() {
+    await this.cargarCiclos()
+  },
   computed: {
     ciclosFiltrados() {
       if (!this.search) return this.ciclos
       const searchLower = this.search.toLowerCase()
       return this.ciclos.filter((ciclo) => ciclo.anio.toString().includes(searchLower))
     },
-  },
-  async created() {
-    await this.cargarCiclos()
   },
   methods: {
     async cargarCiclos() {
@@ -141,21 +141,6 @@ export default {
       }
       this.notificacionVisible = true
     },
-    mostrarFormulario() {
-      this.cicloSeleccionado = {
-                                idCiclo: null,
-                                anio: null,
-                                numero: null,
-                                fechaInicio: null,
-                                fechaFin: null,
-                                estado: null
-                              }
-      this.dialog = true
-    },
-    editarCiclo(ciclo) {
-      this.cicloSeleccionado = { ...ciclo }
-      this.dialog = true
-    },
     async guardarCiclo(datos) {
       try {
         if (this.cicloSeleccionado && this.cicloSeleccionado.idCiclo) {
@@ -174,6 +159,10 @@ export default {
       this.notificacionVisible = true
       this.dialog = false
     },
+    editarCiclo(ciclo) {
+      this.cicloSeleccionado = { ...ciclo }
+      this.dialog = true
+    },
     async eliminarCiclo(ciclo) {
       try {
         await api.deleteCiclo(ciclo.idCiclo)
@@ -186,6 +175,17 @@ export default {
         this.colorNotificacion = 'error'
       }
       this.notificacionVisible = true
+    },
+     mostrarFormulario() {
+      this.cicloSeleccionado = {
+        idCiclo: null,
+        anio: null,
+        numero: null,
+        fechaInicio: null,
+        fechaFin: null,
+        estado: null
+      }
+      this.dialog = true
     },
   },
 }

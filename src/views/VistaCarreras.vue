@@ -15,11 +15,11 @@
       :headers="headers"
       :items="carrerasFiltradas"
       titulo="Carreras"
-      :custom-actions="['ver-cursos']"
+      :custom-actions="['ver-cursos-carrera']"
       @crear="mostrarFormulario"
       @editar="editarCarrera"
       @eliminar="eliminarCarrera"
-      @ver-cursos="verCursosCarrera"
+      @ver-cursos-carrera="verCursosCarrera"
     />
     <ComponenteFormulario
       v-model:dialog="dialog"
@@ -49,10 +49,10 @@ export default {
   components: { ComponenteTablaDatos, ComponenteFormulario, ComponenteNotificacion, ComponenteCursosCarrera },
   data: () => ({
     carreras: [],
-    dialog: false,
-    dialogCursos: false,
     carreraSeleccionada: null,
     carreraParaCursos: null,
+    dialog: false,
+    dialogCursos: false,
     notificacionVisible: false,
     mensajeNotificacion: '',
     colorNotificacion: 'info',
@@ -86,6 +86,9 @@ export default {
       },
     ],
   }),
+  async created() {
+    await this.cargarCarreras()
+  },
   computed: {
     carrerasFiltradas() {
       if (!this.search) return this.carreras
@@ -98,9 +101,6 @@ export default {
           carrera.titulo.toLowerCase().includes(searchLower),
       )
     },
-  },
-  async created() {
-    await this.cargarCarreras()
   },
   methods: {
     async cargarCarreras() {
@@ -117,18 +117,6 @@ export default {
         this.notificacionVisible = true
       }
     }
-    },
-    mostrarFormulario() {
-      this.carreraSeleccionada = { idCarrera: null, codigo: '', nombre: '', titulo: ''}
-      this.dialog = true
-    },
-    editarCarrera(carrera) {
-      this.carreraSeleccionada = { ...carrera }
-      this.dialog = true
-    },
-     verCursosCarrera(carrera) {
-      this.carreraParaCursos = carrera
-      this.dialogCursos = true
     },
     async guardarCarrera(datos) {
       try {
@@ -148,6 +136,10 @@ export default {
       this.notificacionVisible = true
       this.dialog = false
     },
+    editarCarrera(carrera) {
+      this.carreraSeleccionada = { ...carrera }
+      this.dialog = true
+    },
     async eliminarCarrera(carrera) {
       try {
         await api.deleteCarrera(carrera.idCarrera)
@@ -160,6 +152,14 @@ export default {
         this.colorNotificacion = 'error'
       }
       this.notificacionVisible = true
+    },
+    verCursosCarrera(carrera) {
+      this.carreraParaCursos = carrera
+      this.dialogCursos = true
+    },
+    mostrarFormulario() {
+      this.carreraSeleccionada = { idCarrera: null, codigo: null, nombre: null, titulo: null}
+      this.dialog = true
     },
   },
 }
