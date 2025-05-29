@@ -111,7 +111,7 @@ export default {
     return api.get('/ciclos/activo'); // Suponiendo que existe un endpoint para obtener el ciclo activo
   },
 
-  // Oferta Académica
+  // Oferta Académica(Grupos)
   getGrupos() {
     return api.get('/grupos/listar');
   },
@@ -132,8 +132,11 @@ export default {
   matricular(data) {
     return api.post('/matricular/insertar', data);
   },
-  getMatriculas(cicloId, cursoId) {
-    return api.get(`/matricular/listar?ciclo=${cicloId}&curso=${cursoId}`); // Ajuste
+  getMatriculasPorAlumno(idAlumno) {
+    return api.get(`/matricular/listarMatriculasPorAlumno/${idAlumno}`);
+  },
+  getMatriculasPorAlumnoYCiclo(idAlumno, idCiclo) {
+    return api.get(`/matricular/listarMatriculasPorAlumnoYCiclo/${idAlumno}/${idCiclo}`);
   },
   updateNota(alumnoId, cicloId, cursoId, data) {
     return api.put(`/matricular/modificar`, {

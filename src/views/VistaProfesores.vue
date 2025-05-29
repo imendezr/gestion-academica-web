@@ -103,14 +103,14 @@ export default {
         const response = await api.getProfesores()
         this.profesores = response.data
       } catch (error) {
-         const mensaje = error.response?.data?.message || ''
-      if (mensaje.includes('No hay datos')) {
-        this.profesores = [] // <- Tratar como lista vacía
-      } else {
-        this.mensajeNotificacion = `Error al cargar las carreras: ${mensaje || error.message}`
-        this.colorNotificacion = 'error'
-        this.notificacionVisible = true
-      }
+        const mensaje = error.response?.data?.message || ''
+        if (mensaje.includes('No hay datos')) {
+          this.profesores = [] // <- Tratar como lista vacía
+        } else {
+          this.mensajeNotificacion = `Error al cargar las carreras: ${mensaje || error.message}`
+          this.colorNotificacion = 'error'
+          this.notificacionVisible = true
+        }
       }
     },
     async guardarProfesor(datos) {

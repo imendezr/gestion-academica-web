@@ -11,9 +11,9 @@
           v-model="cicloSeleccionado"
           :items="ciclos"
           label="Seleccionar Ciclo"
-          item-title="codigo"
-          item-value="codigo"
-          @update:modelValue="cargarOferta"
+          item-title="label"
+          item-value="idCiclo"
+          @update:modelValue="cargarMatriculas"
         ></v-select>
       </v-col>
       <v-col cols="12" md="6">
@@ -22,24 +22,17 @@
           :items="alumnos"
           label="Seleccionar Alumno"
           item-title="nombre"
-          item-value="cedula"
+          item-value="idAlumno"
+          @update:modelValue="cargarMatriculas"
         ></v-select>
       </v-col>
     </v-row>
     <ComponenteTablaDatos
       :headers="headers"
-      :items="ofertaFiltrada"
-      titulo="Oferta Académica Disponible"
+      :items="gruposMatriculados"
+      titulo="Grupos Matriculados"
       :show-actions="false"
-      :selectable="true"
-      @update:selection="seleccionarCursos"
     />
-    <v-btn
-      color="primary"
-      @click="matricular"
-      :disabled="!alumnoSeleccionado || !cursosSeleccionados.length"
-      >Matricular</v-btn
-    >
   </v-container>
 </template>
 
@@ -53,10 +46,9 @@ export default {
   data: () => ({
     ciclos: [],
     alumnos: [],
-    ofertaFiltrada: [],
+    gruposMatriculados: [],
     cicloSeleccionado: null,
     alumnoSeleccionado: null,
-    cursosSeleccionados: [],
     notificacionVisible: false,
     mensajeNotificacion: '',
     colorNotificacion: 'info',
@@ -67,61 +59,74 @@ export default {
     ],
   }),
   async created() {
-    await this.cargarDatosIniciales()
+    await this.cargarCiclos()
+    await this.cargarAlumnos()
   },
   methods: {
-    async cargarDatosIniciales() {
+    async cargarCiclos() {
       try {
-        const [ciclosResponse, alumnosResponse, cicloActivoResponse] = await Promise.all([
-          api.get('/ciclos'),
-          api.get('/alumnos'),
-          api.get('/ciclos/activo'),
-        ])
-        this.ciclos = ciclosResponse.data
-        this.alumnos = alumnosResponse.data
-        this.cicloSeleccionado = cicloActivoResponse.data.codigo || this.ciclos[0]?.codigo
-        await this.cargarOferta()
+        const response = await api.getCiclos()
+        this.ciclos = response.data.map(ciclo => ({
+        ...ciclo,
+        label: `${ciclo.numero} - ${ciclo.anio} - ${ciclo.estado}`
+        }))
       } catch (error) {
-        const errorMessage = error.response?.data?.message || error.message || 'Error desconocido'
-        this.mensajeNotificacion = `Error al cargar datos iniciales: ${errorMessage}`
-        this.colorNotificacion = 'error'
-        this.notificacionVisible = true
-      }
-    },
-    async cargarOferta() {
-      if (!this.cicloSeleccionado) return
-      try {
-        const response = await api.get(`/oferta-academica?ciclo=${this.cicloSeleccionado}`)
-        this.ofertaFiltrada = response.data
-      } catch (error) {
-        const errorMessage = error.response?.data?.message || error.message || 'Error desconocido'
-        this.mensajeNotificacion = `Error al cargar la oferta académica: ${errorMessage}`
-        this.colorNotificacion = 'error'
-        this.notificacionVisible = true
-      }
-    },
-    seleccionarCursos(cursos) {
-      this.cursosSeleccionados = cursos
-    },
-    async matricular() {
-      try {
-        const matricula = {
-          alumno: this.alumnoSeleccionado,
-          cursos: this.cursosSeleccionados.map((item) => ({
-            ciclo: item.ciclo,
-            curso: item.curso,
-          })),
+        const mensaje = error.response?.data?.message || ''
+        if (mensaje.includes('No hay datos')) {
+          this.ciclos = [] // <- Tratar como lista vacía
+        } else {
+          this.mensajeNotificacion = `Error al cargar los ciclos: ${mensaje || error.message}`
+          this.colorNotificacion = 'error'
+          this.notificacionVisible = true
         }
-        await api.post('/matricula', matricula)
-        this.mensajeNotificacion = 'Matrícula realizada exitosamente'
-        this.colorNotificacion = 'success'
-        this.cursosSeleccionados = []
-      } catch (error) {
-        const errorMessage = error.response?.data?.message || error.message || 'Error desconocido'
-        this.mensajeNotificacion = `Error al realizar la matrícula: ${errorMessage}`
-        this.colorNotificacion = 'error'
       }
-      this.notificacionVisible = true
+    },
+    async cargarAlumnos() {
+      try {
+        const response = await api.getAlumnos()
+        this.alumnos = response.data
+      } catch (error) {
+        const mensaje = error.response?.data?.message || ''
+        if (mensaje.includes('No hay datos')) {
+          this.alumnos = [] // <- Tratar como lista vacía
+        } else {
+          this.mensajeNotificacion = `Error al cargar las carreras: ${mensaje || error.message}`
+          this.colorNotificacion = 'error'
+          this.notificacionVisible = true
+        }
+      }
+    },
+    async cargarMatriculas() {
+      if (!this.alumnoSeleccionado || !this.cicloSeleccionado) {
+        this.gruposMatriculados = []
+        return
+      }
+
+      try {
+        const response = await api.getMatriculasPorAlumnoYCiclo(
+          this.alumnoSeleccionado,
+          this.cicloSeleccionado
+        )
+        this.gruposMatriculados = response.data
+
+        if (this.gruposMatriculados.length === 0) {
+          this.mensajeNotificacion = 'No se encontraron matrículas para el alumno y ciclo seleccionados'
+          this.colorNotificacion = 'info'
+          this.notificacionVisible = true
+        }
+      } catch (error) {
+        const mensaje = error.response?.data?.message || ''
+        if (mensaje.includes('No hay datos')) {
+          this.gruposMatriculados = []
+          this.mensajeNotificacion = 'No se encontraron matrículas para el alumno y ciclo seleccionados'
+          this.colorNotificacion = 'info'
+          this.notificacionVisible = true
+        } else {
+          this.mensajeNotificacion = `Error al cargar las matrículas: ${mensaje || error.message}`
+          this.colorNotificacion = 'error'
+          this.notificacionVisible = true
+        }
+      }
     },
   },
 }

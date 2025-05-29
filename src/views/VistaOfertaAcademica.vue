@@ -162,7 +162,7 @@ export default {
         this.ciclos = response.data.map(ciclo => ({
         ...ciclo,
         label: `${ciclo.numero} - ${ciclo.anio}`
-      }))
+        }))
       } catch (error) {
         const errorMessage = error.response?.data?.message || error.message || 'Error desconocido'
         this.mensajeNotificacion = `Error al cargar las carreras: ${errorMessage}`
