@@ -88,6 +88,10 @@ const router = createRouter({
 
 router.beforeEach((to, from, next) => {
   const usuarioStore = useUsuarioStore()
+
+  // CRÍTICO: Cargar datos del localStorage ANTES de verificar autenticación
+  usuarioStore.cargarUsuarioLocalStorage()
+
   const requiresAuth = to.matched.some((record) => record.meta.requiresAuth)
   const requiredRoles = to.meta.roles || []
 
@@ -95,9 +99,20 @@ router.beforeEach((to, from, next) => {
   const defaultTitle = 'Gestión Académica'
   document.title = to.meta.title ? `${to.meta.title} - ${defaultTitle}` : defaultTitle
 
+  // Debug - remover en producción
+  console.log('Router Debug:', {
+    path: to.path,
+    requiresAuth,
+    userAuth: !!usuarioStore.idUsuario,
+    userType: usuarioStore.tipo,
+    requiredRoles
+  })
+
   if (requiresAuth && !usuarioStore.idUsuario) {
+    console.log('Redirigiendo a login - usuario no autenticado')
     next('/login')
   } else if (requiresAuth && requiredRoles.length && !requiredRoles.includes(usuarioStore.tipo)) {
+    console.log('Redirigiendo a home - rol no autorizado')
     next('/') // Redirigir a home si el rol no coincide
   } else {
     next()

@@ -40,9 +40,9 @@ export default {
     mensajeNotificacion: '',
     colorNotificacion: 'info',
     headers: [
-      { text: 'Cédula', value: 'cedula' },
-      { text: 'Tipo', value: 'tipo' },
-      { text: 'Acciones', value: 'actions', sortable: false },
+      { title: 'Cédula', key: 'cedula' },
+      { title: 'Tipo', key: 'tipo' },
+      { title: 'Acciones', key: 'actions', sortable: false },
     ],
     formFields: [
       {

@@ -47,11 +47,11 @@ export default {
     colorNotificacion: 'info',
     search: '',
     headers: [
-      { text: 'Código', value: 'codigo' },
-      { text: 'Nombre', value: 'nombre' },
-      { text: 'Créditos', value: 'creditos' },
-      { text: 'Horas Semanales', value: 'horasSemanales' },
-      { text: 'Acciones', value: 'actions', sortable: false },
+      { title: 'Código', key: 'codigo' },
+      { title: 'Nombre', key: 'nombre' },
+      { title: 'Créditos', key: 'creditos' },
+      { title: 'Horas Semanales', key: 'horasSemanales' },
+      { title: 'Acciones', key: 'actions', sortable: false },
     ],
     formFields: [
     {

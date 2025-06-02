@@ -58,10 +58,10 @@ export default {
     colorNotificacion: 'info',
     search: '',
     headers: [
-      { text: 'Código', value: 'codigo' },
-      { text: 'Nombre', value: 'nombre' },
-      { text: 'Titulo', value: 'titulo' },
-      { text: 'Acciones', value: 'actions', sortable: false },
+      { title: 'Código', key: 'codigo' },
+      { title: 'Nombre', key: 'nombre' },
+      { title: 'Titulo', key: 'titulo' },
+      { title: 'Acciones', key: 'actions', sortable: false },
     ],
     formFields: [
       {

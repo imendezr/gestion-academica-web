@@ -49,12 +49,12 @@ export default {
     colorNotificacion: 'info',
     search: '',
     headers: [
-      { text: 'Año', value: 'anio' },
-      { text: 'Número', value: 'numero' },
-      { text: 'Fecha de Inicio', value: 'fechaInicio' },
-      { text: 'Fecha de Final', value: 'fechaFin' },
-      { text: 'Estado', value: 'estado' },
-      { text: 'Acciones', value: 'actions', sortable: false },
+      { title: 'Año', key: 'anio' },
+      { title: 'Número', key: 'numero' },
+      { title: 'Fecha de Inicio', key: 'fechaInicio' },
+      { title: 'Fecha de Final', key: 'fechaFin' },
+      { title: 'Estado', key: 'estado' },
+      { title: 'Acciones', key: 'actions', sortable: false },
     ],
     formFields: [
     {

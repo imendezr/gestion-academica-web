@@ -97,9 +97,9 @@ export default {
     colorNotificacion: 'info',
     dialogConfirmarEliminar: false,
     headersCursos: [
-      { text: 'Codigo', value: 'codigo' },
-      { text: 'Nombre', value: 'nombre' },
-      { text: 'Acciones', value: 'actions', sortable: false },
+      { title: 'Codigo', key: 'codigo' },
+      { title: 'Nombre', key: 'nombre' },
+      { title: 'Acciones', key: 'actions', sortable: false },
     ],
      headersGrupos: [
       { text: 'Número de Grupo', value: 'numeroGrupo' },

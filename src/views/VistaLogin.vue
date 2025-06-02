@@ -27,17 +27,23 @@
 </template>
 
 <script setup>
-import { ref } from 'vue'
+import { ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { useUsuarioStore } from '@/stores/usuario'
 import api from '@/services/api'
 
 const router = useRouter()
 const usuarioStore = useUsuarioStore()
-usuarioStore.cargarUsuarioLocalStorage()
 
 const cedula = ref('')
 const clave = ref('')
+
+// Si ya está autenticado, redirigir
+onMounted(() => {
+  if (usuarioStore.idUsuario) {
+    router.push('/')
+  }
+})
 
 const iniciarSesion = async () => {
   try {

@@ -30,6 +30,9 @@ export default {
   getCursosbyCarreraAndCiclo(idCarrera, idCiclo) {
     return api.get(`/cursos/buscarCursosPorCarreraYCiclo/${idCarrera}/${idCiclo}`);
   },
+  getCursosbyCiclo(idCiclo) {
+    return api.get(`/cursos/buscarCursosPorCiclo/${idCiclo}`);
+  },
 
   // Alumnos
   getAlumnos() {
@@ -127,24 +130,22 @@ export default {
   getGruposByCarreraAndCurso(idCarrera, idCurso) {
       return api.get(`/grupos/buscarGruposPorCarreraCurso/${idCarrera}/${idCurso}`);
   },
+   getGruposByCursoCicloAndCarrera(idCurso, idCiclo, idCarrera) {
+    return api.get(`/grupos/buscarGruposPorCursoCicloCarrera/${idCurso}/${idCiclo}/${idCarrera}`);
+  },
 
   // Matrícula
   matricular(data) {
     return api.post('/matricular/insertar', data);
   },
-  getMatriculasPorAlumno(idAlumno) {
-    return api.get(`/matricular/listarMatriculasPorAlumno/${idAlumno}`);
+  deleteMatricula(idMatricula) {
+    return api.delete(`/matricular/eliminar/${idMatricula}`);
+  },
+  getMatriculasPorAlumno(cedula) {
+    return api.get(`/matricular/listarMatriculasPorAlumno/${cedula}`);
   },
   getMatriculasPorAlumnoYCiclo(idAlumno, idCiclo) {
     return api.get(`/matricular/listarMatriculasPorAlumnoYCiclo/${idAlumno}/${idCiclo}`);
-  },
-  updateNota(alumnoId, cicloId, cursoId, data) {
-    return api.put(`/matricular/modificar`, {
-      ...data,
-      alumno: alumnoId,
-      ciclo: cicloId,
-      curso: cursoId,
-    });
   },
 
   // Profesores

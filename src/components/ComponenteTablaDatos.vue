@@ -6,7 +6,7 @@
     class="elevation-1"
     :show-select="selectable"
     v-model="selectedItems"
-    :show-headers="true"
+    show-headers
     @update:modelValue="emitSelection"
   >
     <template v-slot:top>
@@ -37,6 +37,18 @@
       <v-icon v-if="hasCustomAction('ver-grupos-curso')" @click="$emit('ver-grupos-curso', item)">
         mdi-eye
       </v-icon>
+
+      <!-- Botón Desmatricular -->
+      <v-btn
+        v-if="hasCustomAction('desmatricular')"
+        color="red"
+        size="small"
+        variant="outlined"
+        @click="$emit('desmatricular', item)"
+        :loading="desmatriculandoId === item.idMatricula"
+      >
+        Desmatricular
+      </v-btn>
     </template>
   </v-data-table>
 </template>

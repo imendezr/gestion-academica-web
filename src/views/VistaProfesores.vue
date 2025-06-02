@@ -47,11 +47,11 @@ export default {
     colorNotificacion: 'info',
     search: '',
     headers: [
-      { text: 'Cédula', value: 'cedula' },
-      { text: 'Nombre', value: 'nombre' },
-      { text: 'Telefono', value: 'telefono' },
-      { text: 'Email', value: 'email' },
-      { text: 'Acciones', value: 'actions', sortable: false },
+      { title: 'Cédula', key: 'cedula' },
+      { title: 'Nombre', key: 'nombre' },
+      { title: 'Telefono', key: 'telefono' },
+      { title: 'Email', key: 'email' },
+      { title: 'Acciones', key: 'actions', sortable: false },
     ],
     formFields: [
       {
@@ -89,7 +89,6 @@ export default {
       const searchLower = this.search.toLowerCase()
       return this.profesores.filter(
         (profesor) =>
-          profesor.idProfesor.toString().includes(searchLower) ||
           profesor.cedula.toLowerCase().includes(searchLower) ||
           profesor.nombre.toLowerCase().includes(searchLower) ||
           profesor.telefono.toLowerCase().includes(searchLower) ||
