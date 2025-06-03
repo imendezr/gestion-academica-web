@@ -5,18 +5,26 @@
       <v-card-text>
         <v-form ref="form" @submit.prevent="guardar">
           <template v-for="(field, index) in fields" :key="index">
+            <!-- Campo de solo texto/display -->
+            <div v-if="field.type === 'display'" class="mb-4">
+              <div class="text-subtitle-2 text-grey-darken-1 mb-1">{{ field.label }}</div>
+              <div class="text-h6 font-weight-medium">{{ datosLocal[field.key] }}</div>
+            </div>
+
             <!-- Textos y números -->
             <v-text-field
-              v-if="field.type === 'text' || field.type === 'number'"
+              v-else-if="field.type === 'text' || field.type === 'number'"
               v-model="datosLocal[field.key]"
               :label="field.label"
               :type="field.type"
               :rules="field.rules || []"
               :required="field.required"
+              :readonly="field.readonly || false"
+              :disabled="field.disabled || false"
               class="mb-4"
             ></v-text-field>
 
-             <!-- Email -->
+            <!-- Email -->
             <v-text-field
               v-else-if="field.type === 'email'"
               v-model="datosLocal[field.key]"
@@ -24,6 +32,8 @@
               type="email"
               :rules="field.rules || []"
               :required="field.required"
+              :readonly="field.readonly || false"
+              :disabled="field.disabled || false"
               class="mb-4"
             ></v-text-field>
 
@@ -35,6 +45,8 @@
               :items="field.items || []"
               :item-title="field.itemTitle || 'label'"
               :item-value="field.itemValue || 'value'"
+              :readonly="field.readonly || false"
+              :disabled="field.disabled || false"
               class="mb-4"
             ></v-select>
 
@@ -45,7 +57,9 @@
               :label="field.label"
               :items="field.items || []"
               :item-title="field.itemTitle || 'label'"
-              :item-value="field.itemValue || 'value' "
+              :item-value="field.itemValue || 'value'"
+              :readonly="field.readonly || false"
+              :disabled="field.disabled || false"
               multiple
               chips
               class="mb-4"
@@ -58,6 +72,8 @@
               :label="field.label"
               :rules="field.rules || []"
               :required="field.required"
+              :readonly="field.readonly || false"
+              :disabled="field.disabled || false"
               class="mb-4"
             ></v-textarea>
 
@@ -67,6 +83,8 @@
               v-model="datosLocal[field.key]"
               :label="field.label"
               type="date"
+              :readonly="field.readonly || false"
+              :disabled="field.disabled || false"
               class="mb-4"
             ></v-text-field>
 
@@ -75,6 +93,8 @@
               v-else-if="field.type === 'checkbox'"
               v-model="datosLocal[field.key]"
               :label="field.label"
+              :readonly="field.readonly || false"
+              :disabled="field.disabled || false"
               class="mb-4"
             ></v-checkbox>
           </template>
@@ -115,6 +135,7 @@ export default {
     datos(newVal) {
       this.datosLocal = { ...newVal }
     },
+
     dialogLocal(newVal) {
       this.$emit('update:dialog', newVal)
     },

@@ -37,6 +37,14 @@
       <v-icon v-if="hasCustomAction('ver-grupos-curso')" @click="$emit('ver-grupos-curso', item)">
         mdi-eye
       </v-icon>
+       <v-icon v-if="hasCustomAction('ver-alumnos')" @click="$emit('ver-alumnos', item)">
+        mdi-eye
+      </v-icon>
+
+      <!-- Botón modificar nota -->
+      <v-icon v-if="hasCustomAction('modificar-nota')" @click="$emit('modificar-nota', item)">
+        mdi-pencil
+      </v-icon>
 
       <!-- Botón Desmatricular -->
       <v-btn

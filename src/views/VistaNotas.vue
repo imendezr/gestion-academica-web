@@ -5,134 +5,243 @@
       :mensaje="mensajeNotificacion"
       :color="colorNotificacion"
     />
-    <v-row>
-      <v-col cols="12" md="6">
-        <v-select
-          v-model="cicloSeleccionado"
-          :items="ciclos"
-          label="Seleccionar Ciclo"
-          item-title="codigo"
-          item-value="codigo"
-          @update:modelValue="cargarCursos"
-        ></v-select>
-      </v-col>
-      <v-col cols="12" md="6">
-        <v-select
-          v-model="cursoSeleccionado"
-          :items="cursos"
-          label="Seleccionar Curso"
-          item-title="curso"
-          item-value="curso"
-          @update:modelValue="cargarMatriculas"
-        ></v-select>
-      </v-col>
-    </v-row>
+
+    <!-- Tabla de Grupos -->
     <ComponenteTablaDatos
+      v-if="!mostrandoAlumnos"
       :headers="headers"
-      :items="matriculas"
-      titulo="Notas de Alumnos"
-      @editar="editarNota"
+      :items="grupos"
+      titulo="Grupos a Cargo"
+      :mostrar-boton-nuevo="false"
+      :loading="cargando"
+      :custom-actions="['ver-alumnos']"
+      :show-actions="false"
+      @ver-alumnos="verAlumnos"
     />
-    <ComponenteFormulario
-      v-model:dialog="dialog"
-      :datos="notaSeleccionada"
-      titulo="Editar Nota"
+
+    <!-- Tabla de Alumnos -->
+    <ComponenteTablaDatos
+      v-if="mostrandoAlumnos"
+      :headers="headersAlumnos"
+      :items="alumnos"
+      :titulo="`Alumnos del Grupo ${grupoSeleccionado?.numeroGrupo} - ${grupoSeleccionado?.nombreCurso}`"
+      :mostrar-boton-nuevo="false"
+      :loading="cargandoAlumnos"
+      :show-actions="false"
+      :custom-actions="['modificar-nota']"
+      @modificar-nota="abrirFormularioNota"
+    />
+
+    <!-- Botón para volver a la lista de grupos -->
+    <v-btn
+      v-if="mostrandoAlumnos"
+      color="secondary"
+      @click="volverAGrupos"
+      class="mt-4"
+    >
+      <v-icon left>mdi-arrow-left</v-icon>
+      Volver a Grupos
+    </v-btn>
+
+    <!-- Formulario para modificar nota -->
+    <FormularioDialogo
+      v-model:dialog="dialogNota"
+      :datos="datosNota"
+      titulo="Modificar Nota"
+      :fields="camposNota"
       @guardar="guardarNota"
-      @cancelar="dialog = false"
+      @cancelar="cerrarFormularioNota"
     />
   </v-container>
 </template>
 
 <script>
 import ComponenteTablaDatos from '@/components/ComponenteTablaDatos.vue'
-import ComponenteFormulario from '@/components/ComponenteFormulario.vue'
 import ComponenteNotificacion from '@/components/ComponenteNotificacion.vue'
+import FormularioDialogo from '@/components/ComponenteFormulario.vue'
+import { useUsuarioStore } from '@/stores/usuario'
 import api from '@/services/api'
 
 export default {
-  components: { ComponenteTablaDatos, ComponenteFormulario, ComponenteNotificacion },
+  components: {
+    ComponenteTablaDatos,
+    ComponenteNotificacion,
+    FormularioDialogo
+  },
   data: () => ({
-    ciclos: [],
-    cursos: [],
-    matriculas: [],
-    cicloSeleccionado: null,
-    cursoSeleccionado: null,
-    dialog: false,
-    notaSeleccionada: null,
+    grupos: [],
+    alumnos: [],
+    cargando: false,
+    cargandoAlumnos: false,
     notificacionVisible: false,
     mensajeNotificacion: '',
     colorNotificacion: 'info',
+    mostrandoAlumnos: false,
+    grupoSeleccionado: null,
+
+    // Variables para el formulario de nota
+    dialogNota: false,
+    datosNota: {},
+    alumnoSeleccionado: null,
+
     headers: [
-      { text: 'Alumno', value: 'alumno' },
-      { text: 'Curso', value: 'curso' },
-      { text: 'Nota', value: 'nota' },
-      { text: 'Acciones', value: 'actions', sortable: false },
+      { title: 'Numero de grupo', key: 'numeroGrupo' },
+      { title: 'Horario', key: 'horario' },
+      { title: 'Codigo del Curso', key: 'codigoCurso' },
+      { title: 'Nombre del Curso', key: 'nombreCurso' },
+      { title: 'Codigo de Carrera', key: 'codigoCarrera' },
+      { title: 'Nombre de Carrera', key: 'nombreCarrera' },
+      { title: 'Año', key: 'anio' },
+      { title: 'Numero de ciclo', key: 'numeroCiclo' },
+      { title: 'Acciones', key: 'actions', sortable: false },
+    ],
+    headersAlumnos: [
+      { title: 'Cédula', key: 'cedula' },
+      { title: 'Nombre', key: 'nombre' },
+      { title: 'Email', key: 'email' },
+      { title: 'Nota', key: 'nota' },
+      { title: 'Acciones', key: 'actions', sortable: false },
+    ],
+    camposNota: [
+      {
+        key: 'nombre',
+        label: 'Estudiante',
+        type: 'display',
+        required: false,
+      },
+      {
+        key: 'nota',
+        label: 'Nota',
+        type: 'number',
+        required: true,
+        rules: [
+          v => !!v || 'La nota es requerida',
+          v => (v >= 0 && v <= 100) || 'La nota debe estar entre 0 y 100'
+        ]
+      }
     ],
   }),
+  setup() {
+    const usuarioStore = useUsuarioStore()
+    return { usuarioStore }
+  },
   async created() {
-    await this.cargarCiclos()
+    await this.cargarGruposProfesor()
   },
   methods: {
-    async cargarCiclos() {
+    async cargarGruposProfesor() {
       try {
-        const response = await api.get('/ciclos')
-        this.ciclos = response.data
-        const cicloActivoResponse = await api.get('/ciclos/activo')
-        this.cicloSeleccionado = cicloActivoResponse.data.codigo || this.ciclos[0]?.codigo
-        await this.cargarCursos()
+        this.cargando = true
+
+        // Obtener la cédula del profesor desde el store
+        const cedulaProfesor = this.usuarioStore.cedula
+
+        if (!cedulaProfesor) {
+          this.mostrarNotificacion('Error: No se encontró la cédula del profesor', 'error')
+          return
+        }
+
+        // Llamar al endpoint para obtener los grupos del profesor
+        const response = await api.getGruposByProfesorAndCicloActivo(cedulaProfesor)
+
+        this.grupos = response.data || []
+        console.log('Grupos del profesor:', this.grupos)
+        if (this.grupos.length === 0) {
+          this.mostrarNotificacion('No tienes grupos asignados en el ciclo activo', 'info')
+        } else {
+          this.mostrarNotificacion(`Se cargaron ${this.grupos.length} grupos`, 'success')
+        }
+
       } catch (error) {
-        const errorMessage = error.response?.data?.message || error.message || 'Error desconocido'
-        this.mensajeNotificacion = `Error al cargar los ciclos: ${errorMessage}`
-        this.colorNotificacion = 'error'
-        this.notificacionVisible = true
+        console.error('Error al cargar grupos del profesor:', error)
+        this.mostrarNotificacion('Error al cargar los grupos del profesor', 'error')
+        this.grupos = []
+      } finally {
+        this.cargando = false
       }
     },
-    async cargarCursos() {
-      if (!this.cicloSeleccionado) return
+
+    async verAlumnos(grupo) {
       try {
-        const response = await api.get(`/oferta-academica?ciclo=${this.cicloSeleccionado}`)
-        this.cursos = response.data
+        this.cargandoAlumnos = true
+        this.grupoSeleccionado = grupo
+
+        const response = await api.getAlumnosByGrupo(grupo.idGrupo)
+        console.log('Alumnos del grupo:', response.data)
+        this.alumnos = response.data || []
+        this.mostrandoAlumnos = true
+
+        if (this.alumnos.length === 0) {
+          this.mostrarNotificacion('No hay alumnos matriculados en este grupo', 'info')
+        } else {
+          this.mostrarNotificacion(`Se cargaron ${this.alumnos.length} alumnos`, 'success')
+        }
+
       } catch (error) {
-        const errorMessage = error.response?.data?.message || error.message || 'Error desconocido'
-        this.mensajeNotificacion = `Error al cargar los cursos: ${errorMessage}`
-        this.colorNotificacion = 'error'
-        this.notificacionVisible = true
+        console.error('Error al cargar alumnos del grupo:', error)
+        this.mostrarNotificacion('Error al cargar los alumnos del grupo', 'error')
+        this.alumnos = []
+      } finally {
+        this.cargandoAlumnos = false
       }
     },
-    async cargarMatriculas() {
-      if (!this.cicloSeleccionado || !this.cursoSeleccionado) return
+
+    abrirFormularioNota(alumno) {
+      this.alumnoSeleccionado = alumno
+      this.datosNota = {
+        nombre: alumno.nombre,
+        nota: alumno.nota || 0,
+        idMatricula: alumno.idMatricula
+      }
+      this.dialogNota = true
+    },
+
+    async guardarNota(datosFormulario) {
       try {
-        const response = await api.get(
-          `/matricula?ciclo=${this.cicloSeleccionado}&curso=${this.cursoSeleccionado}`,
-        )
-        this.matriculas = response.data
+        const idMatricula = this.datosNota.idMatricula
+        const idAlumno = this.alumnoSeleccionado.idAlumno
+        const nota = datosFormulario.nota
+
+        // Llamar al API para actualizar la nota
+        await api.actualizarNota(idMatricula, idAlumno, nota)
+
+        // Actualizar la nota en el array local para reflejar el cambio inmediatamente
+        const index = this.alumnos.findIndex(alumno => alumno.idMatricula === idMatricula)
+        if (index !== -1) {
+          this.alumnos[index].nota = nota
+        }
+
+        this.mostrarNotificacion('Nota actualizada correctamente', 'success')
+        this.cerrarFormularioNota()
+
       } catch (error) {
-        const errorMessage = error.response?.data?.message || error.message || 'Error desconocido'
-        this.mensajeNotificacion = `Error al cargar las matrículas: ${errorMessage}`
-        this.colorNotificacion = 'error'
-        this.notificacionVisible = true
+        console.error('Error al actualizar la nota:', error)
+        this.mostrarNotificacion('Error al actualizar la nota', 'error')
       }
     },
-    editarNota(matricula) {
-      this.notaSeleccionada = { ...matricula, nota: matricula.nota || 0 }
-      this.dialog = true
+
+    cerrarFormularioNota() {
+      this.dialogNota = false
+      this.datosNota = {}
+      this.alumnoSeleccionado = null
     },
-    async guardarNota(datos) {
-      try {
-        await api.put(`/matricula/${datos.alumno}/${datos.ciclo}/${datos.curso}`, {
-          nota: datos.nota,
-        })
-        await this.cargarMatriculas()
-        this.mensajeNotificacion = 'Nota actualizada exitosamente'
-        this.colorNotificacion = 'success'
-      } catch (error) {
-        const errorMessage = error.response?.data?.message || error.message || 'Error desconocido'
-        this.mensajeNotificacion = `Error al actualizar la nota: ${errorMessage}`
-        this.colorNotificacion = 'error'
-      }
+
+    volverAGrupos() {
+      this.mostrandoAlumnos = false
+      this.alumnos = []
+      this.grupoSeleccionado = null
+    },
+
+    mostrarNotificacion(mensaje, color = 'info') {
+      this.mensajeNotificacion = mensaje
+      this.colorNotificacion = color
       this.notificacionVisible = true
-      this.dialog = false
     },
+
+    // Método para refrescar los datos si es necesario
+    async refrescarDatos() {
+      await this.cargarGruposProfesor()
+    }
   },
 }
 </script>

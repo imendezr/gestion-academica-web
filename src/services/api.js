@@ -56,9 +56,10 @@ export default {
   getAlumnosByCarrera(carreraId) {
     return api.get(`/alumnos/buscarPorCarrera?carrera=${carreraId}`);
   },
-  getHistorial(cedula) {
-    return api.get(`/alumnos/historialAlumno/${cedula}`);
+   getAlumnosByGrupo(grupoId) {
+    return api.get(`/alumnos/buscarPorGrupo?grupo=${grupoId}`);
   },
+
 
   // Carreras
   getCarreras() {
@@ -111,10 +112,10 @@ export default {
     return api.post(`/ciclos/activarCiclo/${idCiclo}`);
   },
   getCicloActivo() {
-    return api.get('/ciclos/activo'); // Suponiendo que existe un endpoint para obtener el ciclo activo
+    return api.get('/ciclos/activo');
   },
 
-  // Oferta Académica(Grupos)
+  //Grupos
   getGrupos() {
     return api.get('/grupos/listar');
   },
@@ -130,8 +131,11 @@ export default {
   getGruposByCarreraAndCurso(idCarrera, idCurso) {
       return api.get(`/grupos/buscarGruposPorCarreraCurso/${idCarrera}/${idCurso}`);
   },
-   getGruposByCursoCicloAndCarrera(idCurso, idCiclo, idCarrera) {
+  getGruposByCursoCicloAndCarrera(idCurso, idCiclo, idCarrera) {
     return api.get(`/grupos/buscarGruposPorCursoCicloCarrera/${idCurso}/${idCiclo}/${idCarrera}`);
+  },
+  getGruposByProfesorAndCicloActivo(cedula) {
+    return api.get(`/grupos/buscarGruposPorProfesorEnCicloActivo/${cedula}`);
   },
 
   // Matrícula
@@ -146,6 +150,9 @@ export default {
   },
   getMatriculasPorAlumnoYCiclo(idAlumno, idCiclo) {
     return api.get(`/matricular/listarMatriculasPorAlumnoYCiclo/${idAlumno}/${idCiclo}`);
+  },
+  actualizarNota(pkMatricula, pkAlumno, nota) {
+  return api.put(`/matricular/actualizarNota/${pkMatricula}/${pkAlumno}/${nota}`);
   },
 
   // Profesores
